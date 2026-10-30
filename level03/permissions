@@ -1,0 +1,31 @@
+بذار کل سیستم symbolic chmod را کوتاه توضیح بدهم چون مفید است:
+
+u = user/owner
+g = group
+o = other
+a = all (همه)
++ = اضافه کن
+- = بردار
+= = دقیقاً همین را بگذار
+
+مثال‌ها:
+
+chmod o+x echo     ← فقط به other، x بده
+chmod g-w echo     ← از group، w را بردار
+chmod u+x echo     ← فقط به owner، x بده
+chmod o+rx echo    ← به other، هم r هم x بده
+
+
+
+r = 4
+w = 2
+x = 1
+جمع می‌کنیم برای هر دسته
+
+سه رقم: owner، group، other
+
+مثال‌ها:
+
+755 = rwxr-xr-x
+644 = rw-r--r--
+700 = rwx------
