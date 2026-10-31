@@ -1,33 +1,8 @@
-ssh level00@ip -p 4242
-
-find / -user flag00 2>/dev/null
-
-ls -ls path-to-files
-
-جمع‌بندیِ تشخیصِ flag00:
-چک	نتیجه
-hash؟ (John)	❌ No hashes loaded
-plaintext؟ (su مستقیم)	❌ Permission denied
-Base64؟ (=, +, /)	❌ نداره   echo `pass` | base64 -d
-cipher؟ (فقط حروف)	✅ بله → Caesar → ROT11
-
-ابزارِ طلایی: به‌جای حدس زدن، بذار یه ابزار تشخیص بده 🎯
-یه ابزارِ خیلی معروف هست به اسمِ CyberChef (یه سایت) که بهش می‌گن «چاقوی سوئیسیِ» رمزگشایی. رشته رو می‌دی، و یه قابلیت داره به اسمِ “Magic” که خودش حدس می‌زنه چه نوع encoding/cipher ـه و decodeش می‌کنه.
-
-توی مرورگر: gchq.github.io/CyberChef
-رشته رو بذار، دنبالِ عملیاتِ Magic بگرد
-
-
-brute-forcing a Caesar cipher: Caesar/ROT
 python -c "
 s='cdiiddwpgswtgt'
 for n in range(1,26):
     print(n, ''.join(chr((ord(c)-97+n)%26+97) for c in s))
 "
-
-reverse:
-print("reverse:", s[::-1])
-
 
 python -c "print('hello')"
 
@@ -59,11 +34,3 @@ ord(c) → حرف رو به عددِ کدِ ASCII تبدیل می‌کنه. مث
 chr(...) → عدد رو دوباره به حرف تبدیل می‌کنه. (برعکسِ ord)
 ''.join(...) → همه‌ی حرف‌های تبدیل‌شده رو به هم می‌چسبونه و یک رشته می‌سازه.
 print(n, ...) → عددِ چرخش و نتیجه‌ش رو کنارِ هم چاپ می‌کنه.
-
-
-su flag00
-Password: 
-Don't forget to launch getflag !
-flag00@SnowCrash:~$ getflag
-Check flag.Here is your token : x24ti5gi3x0ol2eh4esiuxias
-
