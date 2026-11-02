@@ -1,0 +1,67 @@
+TCP در کدام لایه قرار دارد؟
+مدل TCP/IP را ببین:
+TCP/IP Model
+Application
+
+HTTP, HTTPS, SSH, FTP, Telnet
+
+Transport
+
+TCP, UDP
+
+Internet
+
+IP, ICMP
+
+Network Access
+
+Ethernet, Wi-Fi
+
+
+هر لایه مسئولیت متفاوتی دارد:
+لایه	مسئولیت
+Application	منطق ارتباط برنامه‌ها
+Transport	ارتباط بین برنامه‌ها
+Internet	آدرس‌دهی و مسیریابی IP
+Network Access	انتقال داده روی شبکه فیزیکی یا بی‌سیم
+
+مثلاً وقتی با SSH به یک ماشین وصل می‌شوی:
+- SSH پروتکل Application است.
+- TCP مسئول انتقال قابل‌اعتماد داده است.
+- IP مسئول رساندن Packet به مقصد است.
+- Ethernet یا Wi-Fi داده را روی شبکه منتقل می‌کند.
+۳. TCP چطور ارتباط برقرار می‌کند؟
+قبل از انتقال داده، TCP باید یک اتصال برقرار کند.
+
+این فرآیند را Three-Way Handshake می‌نامند.
+
+سه مرحله دارد:
+TCP Three-Way Handshake
+Client                        Server 
+
+10.0.0.10                     10.0.0.20
+
+
+1. SYN
+
+Client → Server
+
+درخواست برقراری اتصال
+
+
+2. SYN + ACK
+
+Server → Client
+
+پذیرش درخواست و تأیید SYN کلاینت
+
+
+3. ACK
+
+Client → Server
+
+تأیید SYN-ACK سرور
+
+Connection established
+
+
