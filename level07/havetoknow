@@ -1,0 +1,72 @@
+۱. متغیر محیطی LOGNAME
+متغیرهای محیطی اطلاعاتی‌ان که shell به برنامه‌ها پاس می‌ده. LOGNAME معمولاً اسم کاربر لاگین‌شده رو نگه می‌داره (مثلاً level07). نکته‌ی مهم: مقدارش رو خودِ کاربر می‌تونه عوض کنه — یعنی ما کنترلش داریم.
+
+۲. تابع getenv()
+در زبان C، getenv("LOGNAME") مقدار همون متغیر محیطی رو می‌خونه. هر چیزی که برنامه از محیط می‌خونه = ورودی قابل‌کنترل توسط مهاجم (entrée contrôlée par l’attaquant).
+
+۳. ltrace — ابزار جدیدت
+برای فهمیدن اینکه یک باینری ناشناخته داخلش چی‌کار می‌کنه، از ltrace (library call tracer / traceur d’appels de bibliothèque) استفاده می‌کنیم. فراخوانی‌های کتابخانه‌ای مثل getenv, system, asprintf رو بهت نشون می‌ده. (برادرش strace فراخوانی‌های سیستمی / appels système رو نشون می‌ده.)
+
+۴. system()
+وقتی برنامه system("یک رشته") رو صدا می‌زنه، اون رشته رو می‌ده به /bin/sh -c. یعنی هر چیزی که ما بتونیم توی اون رشته تزریق کنیم، به‌عنوان دستور shell اجرا می‌شه — دقیقاً نقطه‌ضعف همیشگی.
+
+
+متغیرهای محیطی اطلاعاتی هستند که محیط اجرا به برنامه منتقل می‌کند.
+
+برنامه می‌تواند آن‌ها را با توابعی مانند getenv() بخواند.
+
+برای مثال در C:
+char *name = getenv("LOGNAME");
+
+این کد مقدار متغیر محیطی LOGNAME را دریافت می‌کند.
+
+
+
+char *command;
+
+asprintf(&command, "echo %s", name);
+system(command);
+
+free(command);
+
+
+
+ls -la
+
+file level07
+
+level07@SnowCrash:~$ ./level07 
+level07
+
+
+
+strings level07
+
+۱) اسم توابع (symboles / symbols):
+
+setresgid, setresuid, geteuid, getegid, getenv, asprintf, system
+
+اینا «فعل‌های» برنامه‌ان. یعنی بدون دیدن سورس هم می‌فهمی برنامه: با geteuid/getegid هویت فعلی رو می‌گیره → با setresuid/setresgid خودش رو به اون هویت (یعنی flag07) قفل می‌کنه → با getenv یه متغیر محیطی می‌خونه → با asprintf یه رشته می‌سازه → با system اجراش می‌کنه.
+
+۲) رشته‌های داده (chaînes littérales / string literals):
+
+LOGNAME
+/bin/echo %s 
+/home/user/level07/level07.c
+
+اینا «داده‌ها»ان: اسم متغیر محیطی (LOGNAME)، قالب دستور (/bin/echo %s)، و حتی مسیر سورس اصلی.
+
+با کنار هم گذاشتن این دو بخش، منطق برنامه رو کامل بازسازی کردی بدون اینکه سورس رو داشته باشی — این دقیقاً مهارتیه که ارزیاب ازت می‌خواد ببینه.
+
+
+
+
+ltrace ./level07
+getegid() = 2007          ← گروه فعلی رو گرفت (flag07)
+geteuid() = 2007          ← هویت مؤثر (effective UID) رو گرفت (flag07)
+setresgid(2007,2007,2007) ← خودش رو کامل قفل کرد روی گروه flag07
+setresuid(2007,2007,2007) ← خودش رو کامل قفل کرد روی کاربر flag07
+getenv("LOGNAME") = "level07"   ← متغیر محیطی رو خوند (ورودی قابل‌کنترل ما!)
+asprintf(...) = 18        ← رشته رو ساخت: /bin/echo level07
+system("/bin/echo level07 ...")  ← اجراش کرد
+

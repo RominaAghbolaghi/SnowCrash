@@ -1,0 +1,11 @@
+int i = 0;
+
+while (i < strlen(argv[1]))
+{
+    char c = argv[1][i];
+    c = c + i;
+    putchar(c);
+    i++;
+}
+
+

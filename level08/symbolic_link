@@ -1,0 +1,35 @@
+در لینوکس می‌توانیم با Symbolic Link یک نام جدید برای اشاره به یک فایل دیگر ایجاد کنیم.
+
+مثلاً:
+safe_file  ──────────>  token
+
+در این وضعیت:
+- نام ورودی برنامه safe_file است.
+- نام safe_file شامل token نیست.
+- اما مقصد واقعی Symbolic Link همان فایل token است.
+تابع strstr() فقط نام safe_file را بررسی می‌کند.
+
+تابع open() اما Symbolic Link را دنبال می‌کند و فایل مقصد را باز می‌کند.
+
+این تفاوت، اساس آسیب‌پذیری است.
+
+
+
+ln -s ~/token /tmp/safe_file
+
+
+توضیح:
+- ln: ایجاد لینک
+- -s: ایجاد Symbolic Link
+- ~/token: فایل مقصد
+- /tmp/safe_file: نام لینک
+حالا بررسی کن:
+ls -l /tmp/safe_file
+
+باید چیزی شبیه این ببینی:
+
+
+ls -l /tmp/safe_file
+lrwxrwxrwx 1 level08 level08 24 Nov  3 17:43 /tmp/safe_file -> /home/user/level08/token
+
+

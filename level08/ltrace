@@ -1,0 +1,80 @@
+ls -la
+
+file level08
+
+./level08
+./level08 [file to read]
+
+
+./level08 token
+You may not access 'token'
+
+
+ltrace ./level08 token
+__libc_start_main(0x8048554, 2, 0xbffff7d4, 0x80486b0, 0x8048720 <unfinished ...>
+strstr("token", "token")                                                  = "token"
+printf("You may not access '%s'\n", "token"You may not access 'token'
+)                              = 27
+exit(1 <unfinished ...>
++++ exited (status 1) +++
+
+
+
+ltrace ./level08 /etc/hostname
+__libc_start_main(0x8048554, 2, 0xbffff7c4, 0x80486b0, 0x8048720 <unfinished ...>
+strstr("/etc/hostname", "token")                                          = NULL
+open("/etc/hostname", 0, 014435162522)                                    = 3
+read(3, "SnowCrash\n", 1024)                                              = 10
+write(1, "SnowCrash\n", 10SnowCrash
+)                                               = 10
++++ exited (status 10) +++
+
+
+
+
+خروجی تو:
+strstr("/etc/hostname", "token") = NULL
+
+open("/etc/hostname", 0, ...) = 3
+
+read(3, "SnowCrash\n", 1024) = 10
+
+write(1, "SnowCrash\n", 10) = 10
+
+بیایید خط‌به‌خط بررسی کنیم.
+1. بررسی نام فایل
+strstr("/etc/hostname", "token") = NULL
+
+چون کلمه token در نام فایل وجود ندارد، برنامه اجازه ادامه می‌دهد.
+2. باز کردن فایل
+open("/etc/hostname", 0, ...) = 3
+
+تابع open() فایل را باز کرده است.
+
+پارامتر دوم 0 معادل زیر است:
+O_RDONLY
+
+یعنی فایل فقط برای خواندن باز شده است.
+
+عدد 3 هم File Descriptor است.
+
+در لینوکس معمولاً:
+File Descriptor	کاربرد
+0	stdin
+1	stdout
+2	stderr
+3	اولین فایل بازشده توسط برنامه
+
+
+3. خواندن فایل
+read(3, "SnowCrash\n", 1024) = 10
+
+برنامه حداکثر 1024 بایت درخواست خواندن کرده، اما فقط 10 بایت خوانده است.
+4. نمایش محتوا
+write(1, "SnowCrash\n", 10)
+
+محتوای خوانده‌شده را در stdout نمایش داده است.
+
+
+
+
