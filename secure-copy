@@ -1,0 +1,14 @@
+Si nous ne pouvons pas copier-coller directement un fichier depuis SnowCrash vers la machine hôte, nous pouvons effectuer cette opération depuis le terminal de la machine hôte.
+
+Par exemple, nous créons le fichier contenant le hash sur la machine SnowCrash et toujours dans /var/tmp
+parceque tous les users ont permission dans ce folder:
+
+echo "flag00:cdiiddwpgswtgt" > /var/tmp/hash00.txt
+
+Ensuite, nous utilisons **SCP (Secure Copy)** pour transférer le fichier depuis la machine SnowCrash vers la machine hôte via SSH.
+
+La syntaxe est la suivante :
+
+scp -P 4242 username@ip-snowcrash:absolute-path-sur-snowcrash absolute-path-sur-la-machine-hôte 
+
+

@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+data = open("token", "rb").read().rstrip(b"\n")
+flag = ""
+for i in range(len(data)):
+    flag += chr(data[i] - i)
+print(flag)

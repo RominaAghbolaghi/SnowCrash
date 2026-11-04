@@ -1,0 +1,86 @@
+## Qu’est-ce que John the Ripper ?
+
+John the Ripper est un outil Open Source utilisé pour tester et récupérer des mots de passe.
+
+Son rôle principal est de récupérer le hash d’un mot de passe et de tenter de retrouver le mot de passe original à l’aide de différentes méthodes.
+
+**Point important :** John the Ripper ne travaille généralement pas directement avec le mot de passe, mais avec son hash.
+
+### Exemple simple
+
+Imaginons que nous ayons des informations de ce type sur un système Linux :
+
+flag00:$6$abc123$....
+
+La deuxième partie correspond au **Password Hash (hachage du mot de passe)**.
+
+John peut récupérer ce hash et essayer de retrouver le mot de passe original.
+
+### Comment John effectue-t-il cette opération ?
+
+Supposons que le mot de passe original soit :
+
+hello123
+
+Le système utilise un algorithme de hachage (Hashing Algorithm) et un Salt pour générer la valeur de hachage :
+
+hello123  →  Algorithme de hachage  →  Password Hash
+
+John essaie différentes combinaisons de mots de passe possibles :
+
+password
+123456
+hello123
+admin123
+
+Pour chaque candidat, il calcule le hash correspondant et le compare au hash recherché.
+Si une correspondance est trouvée, il a identifié le mot de passe probable.
+
+
+Il existe deux versions principales :
+
+| John Core | Version originale avec les fonctionnalités de base. |
+| John Jumbo | Version étendue qui prend en charge des centaines de types de Hash et de chiffrements (Cipher). |
+
+
+
+Pour vérifier si John the Ripper est installé sur le système, on utilise la commande :
+which john
+
+Cette commande permet de localiser l'exécutable john dans le système, afin de vérifier s'il est installé et accessible via le PATH.
+
+
+install John sur host:
+git clone https://github.com/openwall/john -b bleeding-jumbo john-jumbo
+cd john-jumbo/src
+./configure && make -sj4
+cd ../run
+
+Maintenant, John est prêt à être utilisé (mais au lieu de taper `john`, tu dois écrire `./john`, car tu te trouves dans son répertoire).
+
+Crée également le fichier contenant le hash dans ce même répertoire, puis exécute John :
+Le format des données fournies à John the Ripper est le suivant :
+
+'flag01:42hDRfypTqqnw
+
+Il se compose de deux parties séparées par `:` :
+
+- `flag00` : le nom de l'utilisateur (Username).
+- `42lkjskjksjd` : le hash du mot de passe (Password Hash).
+
+
+echo 'flag00:`42lkjskjksjd' > hash00.txt
+./john hash00.txt
+./john --show hash00.txt
+
+### Un détail technique important
+
+John the Ripper sauvegarde les mots de passe qu'il a réussi à retrouver dans un fichier appelé `~/.john/john.pot`.
+
+C'est pourquoi, si tu exécutes une deuxième fois :
+
+./john hash00.txt
+
+John peut afficher un message indiquant que le hash a déjà été cassé.
+
+

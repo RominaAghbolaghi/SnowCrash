@@ -1,0 +1,16 @@
+Point important : le projet mentionne-t-il spécifiquement le brute force SSH !
+
+Le règlement du projet précise que le brute force des accès SSH est interdit. 
+Mais pourquoi?
+
+Parce que SSH est un point d'accès distant au système. 
+Sans avoir besoin de connaître les mécanismes internes du système ou d'identifier une vulnérabilité 
+particulière, n'importe qui peut écrire un script qui tente des millions de mots de passe pour essayer
+de se connecter à SSH.
+
+Le projet veut nous apprendre à adopter une approche plus intelligente plutôt que d'utiliser cette méthode
+ sans réflexion.
+
+L'objectif est d'apprendre à identifier des failles de sécurité, à analyser des fichiers,
+ à comprendre les mécanismes de chiffrement et de hachage, à casser des Hashes lorsque cela est nécessaire
+  et à exploiter les vulnérabilités découvertes.

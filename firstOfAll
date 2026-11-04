@@ -1,0 +1,93 @@
+pour la connection depuis host (L’adresse IP de la machine SnowCrash s’affiche sur la machine.) 
+et sur le sujet c'est indique port est 4242
+
+1) ssh username@<IP_SNOWCRASH> -p port
+        ssh level00@192.168.56.103 -p 4242
+
+    dans le sujet pass pour level00 est level00
+        level00@192.168.56.103's password:                     
+
+*************
+Le principe est le suivant : à chaque levelx on doit réussir à récupérer le mot de passe du level suivant. En exécutant la commande `getflag` avec l'utilisateur `flagXX`, on peut obtenir le flag correspondant.
+
+Il y a donc deux possibilités :
+- Soit on trouve le mot de passe de `flagXX`, puis on bascule vers cet utilisateur avec `su flagXX` et on exécute `getflag`.
+- Soit on trouve un moyen d'obtenir les privilèges de l'utilisateur `flagXX` afin de pouvoir exécuter `getflag`.
+*************
+
+
+2)  Dans chaque level, on commence par faire un `ls -la` pour voir les fichiers.
+     On regarde attentivement leurs noms, car ils peuvent contenir un indice.
+     Ensuite, on vérifie les permissions des fichiers.
+
+3)  Si on trouve un fichier, on utilise la commande `file fileName` pour obtenir des informations
+     sur ce fichier.
+
+4) On utilise aussi la commande `find / -user userName 2>/dev/null` pour trouver tous les fichiers appartenant à un utilisateur donné.
+Ici:
+`/` c'est `root` = PATH
+La partie `2>/dev/null` permet de rediriger les messages d'erreur vers `/dev/null`, qui est une sorte de poubelle. En effet, des erreurs comme `Permission denied` peuvent apparaître et encombrer les résultats. On les redirige donc vers `/dev/null` pour ne pas les afficher.
+
+On peut également utiliser la commande :
+
+`grep -Rni 'userName' PATH(/etc) 2>/dev/null`
+
+Ici :
+- `R` signifie que la recherche est récursive, c'est-à-dire qu'elle parcourt également les sous-répertoires.
+- `n` affiche le numéro de la ligne où le texte a été trouvé.
+- `i` signifie que la recherche est insensible à la casse (majuscules et minuscules).
+- `2>/dev/null` permet de masquer les messages d'erreur, notamment ceux liés aux permissions.
+
+Cette commande permet de rechercher toutes les occurrences du nom d'utilisateur dans le système et de nous les afficher.
+
+
+
+
+5) Sous Linux, les informations relatives aux utilisateurs sont stockées dans plusieurs fichiers système. Les plus importants se trouvent dans le répertoire `/etc/`.
+
+Il existe quatre fichiers importants qu'il faut connaître pour le projet SnowCrash :
+
+## 1. Le fichier `/etc/passwd`
+
+Ce fichier contient les informations générales relatives aux comptes utilisateurs du système.
+
+```bash
+cat /etc/passwd
+```
+
+Par exemple, on peut obtenir un résultat similaire à celui-ci :
+
+```text
+root:x:0:0:root:/root:/bin/bash
+level00:x:1000:1000:level00:/home/level00:/bin/bash
+flag00:x:2000:2000:flag00:/home/flag00:/bin/bash
+```
+
+Chaque ligne correspond à un utilisateur.
+
+La structure de chaque ligne est la suivante :
+
+```text
+username:password:UID:GID:comment:home_directory:shell
+```
+| username | Nom de l'utilisateur 
+| password | Généralement `x`, ce qui indique que le Password Hash est stocké dans `/etc/shadow` 
+| UID | Identifiant numérique de l'utilisateur (User ID) 
+| GID | Identifiant numérique de son groupe principal (Group ID) 
+| comment | Informations descriptives sur l'utilisateur 
+| home_directory | Chemin vers le répertoire personnel de l'utilisateur 
+| shell | Shell par défaut de l'utilisateur 
+
+**Remarque importante :** Le fichier `/etc/passwd` est généralement accessible en lecture à tous les utilisateurs, car de nombreux programmes système ont besoin de ces informations pour identifier les utilisateurs.
+
+---
+
+## 2. Le fichier `/etc/shadow`
+
+Ce fichier contient les informations relatives aux mots de passe des utilisateurs, notamment leurs Password Hashes.
+
+### Pourquoi `/etc/shadow` est-il important du point de vue de la sécurité ?
+
+Si un attaquant parvient à lire ce fichier, il peut récupérer les Hashes des mots de passe et tenter de retrouver les mots de passe originaux à l'aide d'attaques telles que l'**Offline Password Cracking** (cassage de mots de passe hors ligne).
+
+C'est pourquoi l'accès à ce fichier est strictement limité.
