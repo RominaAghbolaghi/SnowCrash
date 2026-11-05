@@ -1,0 +1,158 @@
+
+###  Lire un fichier PCAP déjà enregistré (Read)
+
+C'est la fonction que nous avons utilisée.
+
+tcpdump -r level02.pcap
+
+
+`-r` signifie *read* (lire).
+
+
+# La principale limite de tcpdump
+
+`tcpdump` est excellent pour examiner rapidement les paquets, mais il présente une limitation importante :
+
+**Il affiche les paquets individuellement, sans reconstruire la conversation complète.**
+
+ quand nous avons analysé le fichier avec `tcpdump`, les caractères du mot de passe étaient répartis entre plusieurs paquets et mélangés avec les informations des en-têtes. Il était donc difficile de les extraire proprement.
+
+C'est parce que `tcpdump` ne possède pas de fonctionnalité équivalente à **Follow TCP Stream**, qui permet de regrouper les paquets pour reconstruire une conversation TCP.
+
+C'est pour cette raison que c'est bien d'utiliser `tshark`, qui permet de réaliser cette opération.
+
+### Comparaison (important pour la soutenance)
+
+| Fonctionnalité | tcpdump | tshark / Wireshark |
+| Capture en temps réel | Excellent | Oui |
+| Affichage rapide des paquets | Excellent | Oui |
+| Reconstruction d'une conversation (Follow TCP Stream) | Non | Oui |
+ 
+C'est cette dernière fonctionnalité dont nous avions besoin.
+
+---
+
+# Les options importantes de tcpdump
+
+| Option | Fonction | Exemple |
+| `-r <file>` | Read : lire un fichier PCAP | `tcpdump -r level02.pcap` |
+| `-w <file>` | Write : enregistrer une capture dans un fichier | `tcpdump -w out.pcap` |
+| `-i <interface>` | Interface : choisir l'interface réseau à écouter | `tcpdump -i eth0` |
+| `-A` | Afficher le contenu des paquets au format ASCII | `tcpdump -r f.pcap -A` |
+| `-X` | Afficher le contenu en Hexadécimal et en ASCII | `tcpdump -r f.pcap -X` |
+| `-x` | Afficher le contenu uniquement en Hexadécimal | |
+| `-n` | Ne pas résoudre les noms : afficher les IP sous forme numérique plutôt que les noms de domaine. Cela permet aussi d'accélérer l'affichage. | `tcpdump -nr f.pcap` |
+| `-c <N>` | Count : afficher uniquement les N premiers paquets | `tcpdump -r f.pcap -c 10` |
+| `-e` | Afficher également l'en-tête Ethernet, notamment les adresses MAC | |
+| `-s <N>` | Snap length : définir le nombre d'octets capturés pour chaque paquet | |
+| `-v, -vv, -vvv` | Verbose : afficher davantage de détails | |
+
+
+# Les filtres : la fonctionnalité la plus puissante de tcpdump
+
+Les filtres s'ajoutent à la fin de la commande pour afficher uniquement les paquets qui nous intéressent.
+
+| Filtre | Fonction |
+| `host 1.2.3.4` | Afficher uniquement les paquets liés à cette adresse IP. |
+| `src host 1.2.3.4` | Afficher uniquement les paquets provenant de cette adresse IP (source). C'est ce que nous avons utilisé pour isoler le client. |
+| `dst host 1.2.3.4` | Afficher uniquement les paquets destinés à cette adresse IP (destination). |
+| `port 80` | Afficher uniquement le trafic utilisant le port 80. |
+| `tcp / udp` | Afficher uniquement les paquets TCP ou UDP. |
+| `tcp[tcpflags] & tcp-push != 0` | Afficher uniquement les paquets dont le flag PUSH est activé. |
+
+Tu peux combiner plusieurs filtres avec les opérateurs logiques :
+
+- `and` : ET
+- `or` : OU
+- `not` : NON
+
+Par exemple :
+
+tcpdump -nr level02.pcap 'src host 59.233.235.218 and tcp'
+
+
+Cette commande affiche uniquement les paquets TCP provenant de l'adresse IP `59.233.235.218`.
+
+
+# Les trois commandes essentielles pour notre projet
+
+tcpdump -r level02.pcap
+Affiche
+r tous les paquets du fichier.
+
+tcpdump -nr level02.pcap -A
+Afficher les paquets avec leur contenu textuel au format ASCII, sans résolution des noms.
+
+tcpdump -nr level02.pcap 'src host X.X.X.X'
+Afficher uniquement les paquets provenant d'une adresse IP spécifique.
+
+
+# Analyse du fichier level02.pcap étape par étape
+
+### 1. Lire le fichier
+
+```bash
+tcpdump -nr level02.pcap
+```
+
+- `-n` : ne pas résoudre les noms, afficher les adresses IP sous forme numérique.
+- `-r` : lire le fichier PCAP.
+
+### 2. Filtrer les paquets provenant du client
+
+L'adresse IP du client est :
+
+59.233.235.218
+
+
+Nous utilisons donc le filtre :
+
+
+src host 59.233.235.218
+
+
+Cela permet d'isoler uniquement les paquets envoyés par le client.
+
+### 3. Filtrer les paquets ayant le flag PUSH activé
+
+Il existe deux façons de procéder : une méthode simple et une méthode plus précise.
+
+**La méthode recommandée :**
+
+
+tcp[tcpflags] & tcp-push != 0
+
+
+Cela signifie : « Le bit PUSH doit être activé ».
+
+Ce filtre inclut aussi bien les paquets `[P]` que les paquets `[P.]`.
+
+Pourquoi ? Parce que ce qui nous intéresse, c'est la présence du flag PUSH, peu importe que le flag ACK soit également activé.
+
+### La commande complète
+
+tcpdump -nr level02.pcap 'src host 59.233.235.218 and (tcp[tcpflags] & tcp-push != 0)'
+
+### Explication détaillée pour la soutenance
+
+Décomposons cette commande :
+
+**1. `tcpdump -nr level02.pcap`**
+
+Lire le fichier PCAP et afficher les adresses IP sous forme numérique, sans résolution des noms.
+
+**2. `src host 59.233.235.218`**
+
+Afficher uniquement les paquets provenant du client dont l'adresse IP est `59.233.235.218`.
+
+**3. `tcp[tcpflags] & tcp-push != 0`**
+
+Afficher uniquement les paquets dont le flag PUSH est activé.
+
+**4. `and`**
+
+Combiner les deux conditions : les paquets doivent provenir du client ET avoir le flag PUSH activé.
+
+**5. `' '` (guillemets simples)**
+
+Encadrer l'ensemble du filtre entre guillemets simples pour que le shell interprète correctement l'expression et ne traite pas certains caractères comme des opérateurs.

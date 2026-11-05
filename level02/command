@@ -1,4 +1,0 @@
-tcpdump -nr level02.pcap -X 'src host 59.233.235.218 and (tcp[tcpflags] & tcp-push != 0)'
-
-
-

@@ -1,0 +1,32 @@
+## Que sont les flags TCP ?
+
+Lorsque deux ordinateurs communiquent avec TCP, 
+chaque paquet contient une série de flags qui indiquent le rôle de ce paquet.
+
+C'est comme une étiquette qui indique : « Quel type de paquet suis-je ? »
+
+`tcpdump` affiche ces flags sous la forme d'une lettre ou d'un symbole court entre crochets `[...]` :
+
+| Symbole | Nom | Fonction |
+| `S` | SYN | Début d'une nouvelle connexion (*synchronize*) : « Bonjour, je souhaite établir une connexion. » |
+| `.` | ACK | Accusé de réception (*acknowledgment*) : « J'ai bien reçu ton message. » |
+| `P` | PSH | PUSH : « Ce paquet contient des données réelles, transmets-les immédiatement à l'application destinataire. » ← Les données sont ici. |
+| `F` | FIN | Fermeture normale de la connexion (*finish*) : « J'ai terminé, au revoir. » |
+| `R` | RST | Réinitialisation brutale de la connexion (*reset*) : « Coupe la connexion immédiatement. » |
+| `U` | URG | Données urgentes (*urgent*) : peu utilisé. |
+
+## Point important : les flags peuvent être combinés
+
+Un paquet peut contenir plusieurs flags à la fois :
+
+| Notation | Signification |
+| `[S]` | SYN uniquement : premier paquet de la connexion. |
+| `[S.]` | SYN + ACK : réponse du serveur au SYN du client. |
+| `[P.]` | PUSH + ACK : « J'ai des données à transmettre et je confirme également la réception de ton message. » → C'est ici qu'il faut chercher les données. |
+| `[.]` | ACK uniquement : pas de données utiles dans le paquet. |
+| `[F.]` | FIN + ACK : le paquet sert à fermer la connexion. |
+
+## En quoi cela nous a-t-il aidés ?
+Nous cherchions les paquets qui contenaient des données, notamment le mot de passe.
+
+Nous avons donc recherché les paquets portant le flag `[P]` ou `[P.]`

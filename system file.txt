@@ -1,0 +1,328 @@
+
+# Les répertoires du système Linux
+
+## 1. `/usr` : Les programmes et les ressources du système
+
+**User System Resources**
+
+Le répertoire `/usr` contient de nombreux programmes, bibliothèques et ressources logicielles du système.
+
+Par exemple :
+
+```text
+/usr
+├── bin
+├── sbin
+├── lib
+├── share
+└── local
+```
+
+Les principaux sous-répertoires :
+
+| Chemin | Utilisation |
+|---|---|
+| `/usr/bin` | Programmes et commandes destinés aux utilisateurs |
+| `/usr/sbin` | Outils d'administration du système |
+| `/usr/lib` | Bibliothèques logicielles |
+| `/usr/share` | Fichiers indépendants de l'architecture, comme la documentation |
+| `/usr/local` | Logiciels installés localement |
+
+Par exemple, lorsque tu exécutes la commande suivante :
+
+```bash
+which ls
+```
+
+Le résultat peut être :
+
+```text
+/usr/bin/ls
+```
+
+Cela signifie que le fichier exécutable de la commande `ls` se trouve à cet emplacement.
+
+**Lien avec SnowCrash :** notre fichier suspect se trouve dans `/usr/sbin/john`.
+
+---
+
+## 2. `/bin` : Les commandes essentielles du système
+
+**Essential User Commands**
+
+Ce répertoire contient les commandes de base indispensables à l'utilisation et à l'administration élémentaire du système.
+
+Par exemple :
+
+```text
+/bin
+├── ls
+├── cat
+├── cp
+├── mv
+├── rm
+├── pwd
+└── bash
+```
+
+À quoi servent ces commandes ?
+
+| Commande | Utilisation |
+|---|---|
+| `ls` | Afficher le contenu d'un répertoire |
+| `cat` | Afficher le contenu d'un fichier |
+| `cp` | Copier un fichier |
+| `mv` | Déplacer ou renommer un fichier |
+| `rm` | Supprimer un fichier |
+| `pwd` | Afficher le chemin du répertoire courant |
+| `bash` | Exécuter un Shell |
+
+**Remarque technique :**
+
+Dans les versions récentes d'Ubuntu, `/bin` est généralement un lien symbolique (*Symbolic Link*) vers `/usr/bin`.
+
+Cela signifie que l'on peut trouver :
+
+```text
+/bin -> /usr/bin
+```
+
+Il ne faut donc pas toujours considérer ces deux répertoires comme deux ensembles complètement distincts.
+
+---
+
+## 3. `/sbin` : Les outils d'administration du système
+
+**System Administration Binaries**
+
+Ce répertoire contient des outils destinés à l'administration et à la gestion du système.
+
+Par exemple :
+
+```text
+/sbin
+├── fsck
+├── reboot
+├── shutdown
+├── ip
+└── mkfs
+```
+
+Leurs principales utilisations :
+
+| Commande | Utilisation |
+|---|---|
+| `fsck` | Vérifier et réparer un système de fichiers |
+| `reboot` | Redémarrer le système |
+| `shutdown` | Éteindre le système |
+| `ip` | Gérer la configuration réseau |
+| `mkfs` | Créer un système de fichiers |
+
+Historiquement, la différence entre `/bin` et `/sbin` était la suivante :
+
+- `/bin` était principalement destiné aux commandes générales.
+- `/sbin` était destiné aux outils d'administration du système.
+
+Aujourd'hui, cette distinction n'est plus absolue et de nombreuses distributions utilisent une structure `/usr` unifiée.
+
+---
+
+## 4. `/etc` : Les fichiers de configuration du système
+
+**Important pour la cybersécurité**
+
+Ce répertoire est l'un des emplacements les plus importants pour l'analyse de sécurité sous Linux.
+
+`/etc` contient les fichiers de configuration (*Configuration Files*).
+
+Ce sont les fichiers qui définissent le fonctionnement du système et de ses services.
+
+Par exemple :
+
+```text
+/etc
+├── passwd
+├── shadow
+├── group
+├── hostname
+├── hosts
+├── ssh
+└── sudoers
+```
+
+Examinons quelques fichiers importants :
+
+| Fichier | Utilisation |
+|---|---|
+| `/etc/passwd` | Informations sur les comptes utilisateurs |
+| `/etc/shadow` | Informations sur les mots de passe sous forme de Hash et leurs paramètres |
+| `/etc/group` | Informations sur les groupes d'utilisateurs |
+| `/etc/hostname` | Nom de la machine |
+| `/etc/hosts` | Association entre les noms d'hôtes et les adresses IP |
+| `/etc/ssh/` | Configuration de SSH |
+| `/etc/sudoers` | Configuration des autorisations sudo |
+
+### Pourquoi ce répertoire est-il important pour la cybersécurité ?
+
+Parce que des erreurs de configuration dans ces fichiers peuvent créer des vulnérabilités.
+
+Par exemple :
+
+- Une configuration SSH trop permissive.
+- Un accès non autorisé aux informations des utilisateurs.
+- Une mauvaise configuration de sudo.
+- Une appartenance inappropriée des utilisateurs à certains groupes.
+
+**Remarque :**
+
+Sous Linux, les mots de passe réels des utilisateurs ne sont généralement pas stockés en texte clair dans `/etc/passwd`.
+
+Les informations sensibles liées à l'authentification sont conservées dans `/etc/shadow`, dont l'accès est plus restreint.
+
+---
+
+## 5. `/dev` : Les fichiers représentant les périphériques
+
+**Device Files**
+
+Voici l'une des différences intéressantes entre Linux et Windows.
+
+Sous Linux, de nombreux périphériques et certaines ressources système sont accessibles à travers des fichiers spéciaux situés dans `/dev`.
+
+Par exemple :
+
+```text
+/dev
+├── null
+├── zero
+├── random
+├── urandom
+├── sda
+└── tty
+```
+
+Explication des éléments importants :
+
+| Fichier | Utilisation |
+|---|---|
+| `/dev/null` | Ignorer et jeter les données envoyées vers ce périphérique |
+| `/dev/zero` | Générer un flux d'octets contenant uniquement des zéros |
+| `/dev/random` | Générer des données aléatoires |
+| `/dev/urandom` | Générer des données pseudo-aléatoires |
+| `/dev/sda` | Représenter un disque |
+| `/dev/tty` | Représenter une interface de terminal |
+
+### Un exemple concret tiré de notre projet
+
+Nous avons précédemment exécuté cette commande :
+
+```bash
+find / -user flag00 2>/dev/null
+```
+
+Maintenant, tu sais ce qu'est `/dev/null`.
+
+Nous avons redirigé les messages d'erreur vers ce périphérique afin qu'ils ne s'affichent pas à l'écran.
+
+En réalité :
+
+```bash
+2>/dev/null
+```
+
+Signifie :
+
+« Envoie le flux d'erreur vers le périphérique null et ignore son contenu. »
+
+C'est une application concrète de nos connaissances Linux dans le projet SnowCrash.
+
+---
+
+## 6. `/var` : Les données variables du système
+
+**Variable Data**
+
+Ce répertoire contient les données qui évoluent pendant le fonctionnement du système.
+
+Par exemple :
+
+```text
+/var
+├── log
+├── cache
+├── tmp
+├── mail
+└── lib
+```
+
+Les principaux sous-répertoires :
+
+| Chemin | Utilisation |
+|---|---|
+| `/var/log` | Fichiers de logs du système et des applications |
+| `/var/cache` | Données mises en cache |
+| `/var/tmp` | Fichiers temporaires conservés plus longtemps |
+| `/var/lib` | Données d'état des applications et des services |
+| `/var/mail` | Boîtes mail locales |
+
+### Pourquoi `/var/log` est-il important pour la sécurité ?
+
+Imaginons que quelqu'un tente de se connecter à un serveur.
+
+Les informations relatives à cette tentative peuvent être enregistrées dans les logs du système.
+
+Par exemple :
+
+```bash
+ls /var/log
+```
+
+Tu peux trouver des fichiers comme :
+
+```text
+auth.log
+syslog
+kern.log
+```
+
+Ces fichiers peuvent être très utiles pour analyser des événements liés à la sécurité.
+
+Par exemple, sur les systèmes Debian/Ubuntu, `auth.log` peut enregistrer des informations concernant les tentatives d'authentification.
+
+---
+
+## 7. `/tmp` : Les fichiers temporaires
+
+**Security Sensitive**
+
+Ce répertoire est destiné au stockage des fichiers temporaires créés par les applications et les utilisateurs.
+
+Par exemple, une application peut créer un fichier temporaire pendant son exécution :
+
+```text
+/tmp/temp123
+```
+
+### Caractéristiques importantes
+
+- Les utilisateurs peuvent généralement y créer des fichiers.
+- Les fichiers temporaires peuvent être supprimés après un redémarrage (*Restart*) ou lors d'une opération de nettoyage du système.
+- Ce répertoire est généralement protégé par une permission particulière appelée **Sticky Bit**.
+
+### Qu'est-ce que le Sticky Bit ?
+
+Imaginons que plusieurs utilisateurs créent des fichiers dans `/tmp`.
+
+Si chaque utilisateur pouvait supprimer librement les fichiers des autres utilisateurs, cela pourrait créer une situation dangereuse.
+
+Le Sticky Bit permet de limiter la suppression des fichiers :
+
+Un utilisateur ordinaire ne peut généralement supprimer que ses propres fichiers, et non ceux des autres utilisateurs.
+
+### Permission habituelle de `/tmp`
+
+```text
+drwxrwxrwt
+```
+
+La lettre `t` à la fin des permissions indique que le Sticky Bit est activé.

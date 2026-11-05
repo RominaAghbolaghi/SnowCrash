@@ -1,0 +1,139 @@
+## 1. Qu'est-ce que Telnet exactement ?
+
+Telnet est un ancien protocole de connexion à distance (*protocole de connexion à distance*). 
+Il permet de se connecter à un autre ordinateur depuis son propre ordinateur et d'y exécuter des commandes,
+ comme si on était assis devant cette machine.
+
+Son fonctionnement est similaire à celui de SSH.
+
+| Caractéristique | Telnet | SSH |
+| Chiffrement | ❌ Aucun (données en texte clair) | ✅ Oui (données chiffrées) |
+| Époque | Ancien (1969) | Moderne |
+| Sécurité | Dangereux | Sécurisé |
+
+C'est pour cette raison que Telnet est aujourd'hui presque obsolète et que SSH l'a remplacé dans la plupart des usages.
+
+Telnet transmet toutes les informations, y compris les mots de passe, en texte brut (*plaintext*). C'est précisément ce qui nous a permis de retrouver le mot de passe dans ce niveau.
+
+## 2. Comment avons-nous identifié Telnet ?
+
+Pour être précis, nous avons repéré trois indices directement dans les données (et non simplement sur la base d'une supposition).
+
+### 1. Le comportement caractère par caractère (*character-at-a-time*)
+
+Tu te souviens ? Dans la sortie de `tshark`, après `login:`, les caractères apparaissaient un par un :
+
+1  l
+1  e
+1  v
+...
+
+Chaque `1` correspond à un paquet dont la longueur (`length`) est de 1 octet.
+
+Cela signifie que chaque touche pressée par l'utilisateur a été envoyée séparément.
+
+C'est un comportement classique de Telnet. (SSH ne fonctionne pas de cette manière : il transmet les données dans des paquets chiffrés.)
+
+### 2. L'écho des caractères par le serveur (*echo*)
+
+Tu as remarqué que chaque caractère saisi par le client était également renvoyé par le serveur ?
+
+Par exemple :
+
+
+1  l
+2  .l
+
+
+Le serveur renvoie le caractère reçu. Ce comportement correspond à l'écho (*echo*) de Telnet.
+
+### 3. Le contenu entièrement lisible
+
+Comme les données n'étaient pas chiffrées, nous avons pu lire clairement les messages suivants :
+
+
+wwwbugs login:
+Password:
+Login incorrect
+
+
+Si la communication avait utilisé SSH, nous aurions vu des données chiffrées et non du texte directement lisible.
+
+### 4. Un indice supplémentaire (que nous n'avons pas encore vérifié, mais que nous pouvons rechercher)
+
+Les octets de contrôle de Telnet commencent notamment par `0xff`, appelé **IAC** (*Interpret As Command*).
+
+Les séquences ressemblant à ceci :
+
+.. .....#.....'
+
+que nous avons observées au début de la communication correspondent probablement aux octets utilisés pour la négociation des options Telnet.
+
+
+
+
+
+
+
+
+## 1. On peut voir les deux sens de la communication
+
+Dans cette sortie hexadécimale, on distingue deux directions de communication, séparées par l'indentation (décalage vers la droite) :
+
+```text
+000000B2  6c          l       ← Sans indentation = du client (utilisateur)
+   000000C9  00 6c    .l      ← Avec indentation = du serveur (réponse)
+```
+
+| Ligne | Provenance | Contenu |
+|---|---|---|
+| `6c` → `l` | Client (l'utilisateur a tapé le caractère) | La lettre `l` |
+| `00 6c` → `.l` | Serveur (il renvoie le caractère) | Le même `l` est renvoyé |
+
+## 2. Pourquoi le serveur renvoie-t-il le même caractère ?
+
+C'est le mécanisme appelé **Echo** (renvoi du caractère).
+
+Tu te souviens ? Je t'avais expliqué que Telnet renvoie les caractères saisis sous forme d'écho. C'est exactement ce que nous observons ici :
+
+1. L'utilisateur tape `l` → le client envoie `6c` (qui correspond à la lettre `l`).
+2. Le serveur renvoie ce `l` (`00 6c`) afin qu'il puisse s'afficher sur l'écran de l'utilisateur.
+
+Pourquoi ?
+
+Avec Telnet, lorsque tu tapes un caractère, ton ordinateur ne l'affiche pas directement à l'écran. À la place, le caractère est envoyé au serveur, qui le renvoie au client. C'est seulement à ce moment-là qu'il apparaît à l'écran.
+
+Ce mécanisme s'appelle **Remote Echo**.
+
+## 3. Ce que nous avons observé
+
+- Dans la partie `username` : chaque caractère apparaît deux fois (`l`, puis `.l`) → l'écho est activé.
+- Dans la partie `password` : chaque caractère apparaît une seule fois (`f`, `t`, `_`, ...) → l'écho est désactivé.
+
+### Pourquoi ?
+
+C'est un comportement volontaire, pour des raisons de sécurité.
+
+Imagine que tu saisisses ton mot de passe. Si le serveur renvoyait chaque caractère du mot de passe par écho, les caractères apparaîtraient à l'écran et toute personne regardant par-dessus ton épaule pourrait lire ton mot de passe.
+
+C'est pourquoi, lorsque vient le moment de saisir le mot de passe, le serveur désactive l'écho.
+
+Voici ce qui se passe :
+
+- Tu saisis ton mot de passe.
+- Mais rien ne s'affiche à l'écran, pas même des astérisques.
+- C'est parce que le serveur ne renvoie pas les caractères saisis.
+
+C'est le même comportement que tu as probablement déjà observé sous Linux : lorsque tu utilises `sudo` ou `su` et que le système te demande un mot de passe, rien ne s'affiche pendant la saisie.
+
+Le mécanisme est exactement le même.
+
+## 4. Comment cela fonctionne-t-il techniquement ?
+
+Telnet possède une option appelée **ECHO option**.
+
+Avant la saisie du mot de passe, le serveur envoie un message de contrôle indiquant qu'il faut désactiver l'écho des caractères.
+
+Ce message utilise notamment les octets `0xff` (IAC) que nous avons observés précédemment.
+
+Après la saisie du mot de passe, le serveur peut réactiver l'écho.

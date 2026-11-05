@@ -1,0 +1,91 @@
+## 1. Encoding (Encodage)
+
+**Objectif :** Transformer des données dans un autre format ou une autre représentation, généralement pour assurer la compatibilité, faciliter le transfert ou le stockage.
+
+L'encodage n'a pas pour but de garantir la confidentialité des informations et peut généralement être inversé sans aucune clé.
+
+### Types d'encodage
+
+| Type   | Utilisation |
+| Base64 | Représentation de données binaires sous forme de texte |   
+| Hexadécimal (Hex) | Représentation des données à l'aide des chiffres de 0 à 9 et des lettres de A à F |
+| Encodage URL | Représentation des caractères spéciaux dans une URL |
+| ASCII | Correspondance entre les caractères et leurs valeurs numériques |
+| Unicode / UTF-8 | Représentation et encodage des caractères textuels |
+| Entités HTML | Représentation des caractères spéciaux en HTML |
+
+
+echo "SGVsbG8=" | base64 -d
+echo "48656c6c6f" | xxd -r -p
+
+
+## 2. Encryption (Chiffrement)
+
+**Objectif :** Garantir la confidentialité des informations afin que seules les personnes disposant de la clé appropriée puissent les récupérer.
+
+Le chiffrement est effectué à l'aide d'un algorithme cryptographique et d'une clé (Key).
+
+Plaintext + Key + Encryption Algorithm ---->   Ciphertext
+
+Ciphertext + Key + Decryption Algorithm  ---->  Plaintext
+
+### Les deux principaux types de chiffrement
+
+#### A. Chiffrement symétrique (Symmetric Encryption)
+
+Dans cette méthode, une même clé secrète est utilisée pour le chiffrement (Encryption) et le déchiffrement (Decryption).
+
+**Exemples d'algorithmes :**
+
+- AES
+- ChaCha20
+- 3DES (ancien et obsolète pour les nouvelles applications)
+
+**Utilisations :** Chiffrement des fichiers, des disques et des communications.
+
+#### B. Chiffrement asymétrique (Asymmetric Encryption)
+
+Cette méthode utilise une paire de clés :
+
+- **Clé publique (Public Key)**
+- **Clé privée (Private Key)**
+
+**Exemples d'algorithmes :**
+
+- RSA
+- ECC-based encryption schemes (Elliptic Curve Cryptography).
+
+**Utilisations :** Échange sécurisé de clés et communications chiffrées.
+
+**Remarque :** En pratique, des protocoles comme TLS utilisent généralement une combinaison de chiffrement asymétrique ou d'accord de clé (Key Agreement) et de chiffrement symétrique.
+
+
+## Hashing (Hachage)
+
+**Objectif :** Transformer des données en une valeur de longueur fixe à l'aide d'une fonction de hachage (Hash Function).
+
+Le hachage est une opération à sens unique (one-way). Cela signifie que, par conception, il ne devrait pas être possible de retrouver facilement les données originales à partir de leur empreinte (Hash).
+
+### Types d'algorithmes de hachage (Hashing Algorithms)
+
+| Algorithme | Description |
+| MD5 | Ancien algorithme, considéré comme non sécurisé pour les nouvelles applications de sécurité. |
+| SHA-1 | Ancien algorithme présentant des faiblesses de sécurité. |
+| SHA-256 | Membre de la famille SHA-2, adapté aux usages généraux du hachage. |
+| SHA-512 | Membre de la famille SHA-2. |
+| bcrypt | Algorithme spécialement conçu pour le hachage des mots de passe (Password Hashing). |
+| scrypt | Algorithme de hachage des mots de passe résistant aux attaques exploitant la puissance du matériel. |
+| Argon2 | Algorithme moderne de hachage des mots de passe. |
+
+### Point très important
+
+SHA-256, utilisé seul, n'est pas un choix approprié pour stocker des mots de passe, car il est très rapide. Un attaquant peut donc tester un grand nombre de mots de passe potentiels en très peu de temps.
+`echo -n "Hello" | sha256sum`
+
+Pour stocker les mots de passe, il faut utiliser des algorithmes spécialement conçus pour le hachage des mots de passe, tels que **Argon2id, bcrypt ou scrypt**.
+
+1. **dCode** : Pour identifier le type de chiffrement ou d'encodage. https://www.dcode.fr
+2. **boxentriq** : Identification automatique des chiffrements 
+    Utile pour les textes dont on ne connaît pas le type de chiffrement utilisé. https://www.boxentriq.com
+2. **CyberChef** : Pour tester différentes opérations de transformation et de décodage.             
+

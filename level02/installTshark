@@ -1,0 +1,67 @@
+**Tshark** disposait à la fois de la fonctionnalité de reconstruction des communications (*Follow TCP Stream*) et d'une interface en ligne de commande. C'était donc le choix idéal.
+
+## 1. Lancer un conteneur Ubuntu avec Podman
+
+podman run --rm -it -v "$(pwd)":/data:Z ubuntu bash
+
+
+C'est pratiquement la même commande que précédemment, à la différence près que nous avons remplacé `docker` par `podman` et ajouté un petit `:Z`, que nous allons expliquer ci-dessous.
+
+### Explication de chaque élément
+
+| Élément | Signification |
+| `podman run` | Créer et démarrer un conteneur. |
+| `--rm` | Supprimer automatiquement le conteneur après sa fermeture (`exit`). |
+| `-it` | Fournir un terminal interactif. |
+| `-v "$(pwd)":/data` | Monter le répertoire courant dans le répertoire `/data` à l'intérieur du conteneur. |
+| `:Z` | Option spécifique aux systèmes utilisant SELinux, comme Fedora ou les machines de l'École 42. Elle permet de configurer correctement les permissions d'accès aux fichiers. |
+| `ubuntu` | Utiliser l'image Ubuntu. |
+| `bash` | Démarrer un shell Bash. |
+
+## 2. Commandes utiles pour gérer les conteneurs et les images
+
+| Commande | Fonction |
+| `podman ps -a` | Afficher tous les conteneurs, y compris ceux qui sont arrêtés. |
+| `podman images` | Afficher les images téléchargées. |
+| `podman rmi ubuntu` | Supprimer une image. |
+| `exit` | Quitter le conteneur (avec `--rm`, celui-ci sera également supprimé). |
+
+## 3. Installer tshark
+
+Une fois dans le conteneur Ubuntu, exécuter :
+
+
+apt update && apt install -y tshark
+
+
+## 4. Analyser le flux TCP avec tshark
+
+Pour afficher le flux TCP en format hexadécimal :
+
+
+tshark -r /data/level02.pcap -z follow,tcp,hex,0 -q
+
+
+Pour afficher le flux TCP en format ASCII :
+
+
+tshark -r /data/level02.pcap -z follow,tcp,ascii,0 -q
+
+
+## 5. Comprendre la syntaxe de `follow`
+
+La syntaxe `follow,tcp` était incomplète.
+
+La commande `follow` nécessite quatre éléments, et non deux :
+
+
+follow , tcp , <format d'affichage> , <numéro du flux>
+
+
+Explication :
+
+| Élément | Signification |
+| `follow` | Suivre et reconstruire le flux de communication. |
+| `tcp` | Indiquer que le protocole utilisé est TCP. |
+| `ascii` | Définir le format d'affichage (c'est cet élément qui manquait). |
+| `0` | Indiquer le numéro du flux TCP (c'est également cet élément qui manquait). |

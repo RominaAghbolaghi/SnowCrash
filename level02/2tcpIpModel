@@ -1,0 +1,130 @@
+## Dans quelle couche se situe TCP ?
+
+Examinons le modèle TCP/IP :
+
+### Modèle TCP/IP
+
+| Couche | Protocoles |
+| Application | HTTP, HTTPS, SSH, FTP, Telnet |
+| Transport | TCP, UDP |
+| Internet | IP, ICMP |
+| Accès réseau (Network Access) | Ethernet, Wi-Fi |
+
+Chaque couche a une responsabilité différente :
+
+| Couche | Responsabilité |
+| Application | Logique de communication entre les applications |
+| Transport | Communication entre les applications |
+| Internet | Adressage et routage IP |
+| Accès réseau (Network Access) | Transmission des données sur un réseau physique ou sans fil |
+
+Par exemple, lorsque tu te connectes à une machine à l'aide de SSH :
+
+- SSH est un protocole de la couche Application.
+- TCP est responsable du transfert fiable des données.
+- IP est responsable de l'acheminement des paquets jusqu'à leur destination.
+- Ethernet ou Wi-Fi transmet les données sur le réseau.
+
+
+Ce tableau représente le modèle TCP/IP. Il classe les protocoles réseau en fonction de la couche dans laquelle ils fonctionnent.
+
+****** En termes simples, lorsque deux ordinateurs communiquent via un réseau, chaque couche est responsable d'une tâche spécifique.
+
+1. Application (couche Application)
+Cette couche communique directement avec les applications qui utilisent le réseau.
+|
+|HTTP	| Transfert des pages web
+|HTTPS	| Transfert sécurisé des données des pages web
+|SSH	| Connexion sécurisée à distance à un ordinateur
+|FTP	| Transfert de fichiers entre ordinateurs
+|Telnet	| Connexion à distance, sans chiffrement
+
+
+Exemple : Lorsque tu visites un site web, ton navigateur utilise HTTP ou HTTPS pour communiquer avec le serveur.
+
+2. Transport (couche Transport)
+Cette couche est responsable du transfert des données entre les applications de deux ordinateurs.
+|Protocole	|Fonction
+|TCP	| Transmission fiable des données
+|UDP	| Transmission rapide des données, sans garantie de livraison
+
+
+Exemple :
+- TCP vérifie que les données ont bien été reçues par le destinataire.
+- UDP envoie les données sans attendre de confirmation de réception.
+Remarque : TCP utilise les numéros de port (Port) pour identifier les applications source et destination.
+
+3. Internet (couche Internet)
+Cette couche est responsable de l'adressage IP et du routage des paquets entre différents réseaux.
+|Protocole	| Fonction
+|IP	| Adressage et acheminement des paquets entre les réseaux
+|ICMP	| Envoi de messages de contrôle et de signalement d'erreurs réseau
+
+
+Exemple :
+
+Lorsque ton ordinateur veut se connecter à un serveur sur Internet, IP permet de déterminer à quelle adresse le paquet doit être envoyé.
+
+La commande ping utilise également ICMP.
+
+4. Network Access (couche Accès réseau)
+Cette couche est responsable de la transmission réelle des données à travers le support réseau.
+|Technologie	| Fonction
+|Ethernet	| Communication réseau via un câble
+|Wi-Fi	| Communication réseau sans fil
+
+
+Cette couche traite notamment des adresses MAC et de la transmission des trames (Frames).
+
+Exemple pratique : que se passe-t-il lorsque tu visites un site web ?
+Imaginons que tu saisisses l'adresse https://example.com dans ton navigateur.
+
+Les données traversent les différentes couches :
+Couche	Ce qui se passe
+Application	HTTPS prépare la requête du navigateur.
+Transport	TCP découpe les données en segments et assure leur transmission.
+Internet	IP détermine l'adresse de destination.
+Network Access	Les données sont envoyées via Wi-Fi ou Ethernet.
+
+
+Du côté du destinataire, le processus se déroule dans le sens inverse.
+
+
+
+## 3. Comment TCP établit-il une connexion ?
+
+Avant de transférer des données, TCP doit établir une connexion.
+
+Ce processus est appelé **Three-Way Handshake** (poignée de main en trois étapes).
+
+Il comporte trois étapes :
+
+### TCP Three-Way Handshake
+
+Client                        Server
+
+10.0.0.10                     10.0.0.20
+
+
+1. SYN
+
+Client → Server
+
+Demande d'établissement de la connexion
+
+
+2. SYN + ACK
+
+Server → Client
+
+Acceptation de la demande et accusé de réception du SYN du client
+
+
+3. ACK
+
+Client → Server
+
+Accusé de réception du SYN-ACK du serveur
+
+
+Connection established/Connexion établie

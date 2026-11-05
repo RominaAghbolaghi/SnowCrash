@@ -1,0 +1,259 @@
+## Ce que nous voulons apprendre
+
+Dans l'analyse du trafic réseau (*Network Traffic Analysis*), nous avons trois concepts importants :
+
+1. **Packet (paquet)** : une unité indépendante de données transmise sur le réseau.
+2. **TCP Stream (flux TCP)** : un ensemble de paquets appartenant à une même connexion TCP, réassemblés dans le bon ordre.
+3. **Payload (charge utile)** : les données transportées à l'intérieur d'un paquet.
+
+
+
+# Analyse d'un paquet TCP
+
+Nous allons analyser ce paquet en deux parties :
+
+1. Les informations extraites des en-têtes IP et TCP par `tcpdump`.
+2. Le contenu réel du paquet, affiché en Hexadécimal et en ASCII.
+
+Ce paquet correspond à la phase d'échange de données d'une connexion TCP, et non à la phase d'établissement de la connexion (*Three-Way Handshake*).
+
+## 1. Analyse des informations générales du paquet
+
+
+06:23:34.363418 IP 59.233.235.218.39247 > 59.233.235.223.12121:
+Flags [P.], seq 185:186, ack 225, win 115,
+options [nop,nop,TS val 18595010 ecr 46283874], length 1
+
+
+*Analysons chaque partie :
+
+| Élément | Valeur | Explication |
+| Timestamp | `06:23:34.363418` | Heure à laquelle le paquet a été capturé. |
+| Protocol | `IP` | Protocole de la couche Internet. |
+| Source IP | `59.233.235.218` | Adresse IP de l'émetteur (Client). |
+| Source Port | `39247` | Port source. |
+| Destination IP | `59.233.235.223` | Adresse IP du destinataire (Server). |
+| Destination Port | `12121` | Port de destination. |
+| Flags | `[P.]` | Les flags PSH et ACK sont activés. |
+| Sequence | `185:186` | Plage des numéros de séquence des données contenues dans ce segment. |
+| ACK | `225` | Le prochain octet attendu de la part de l'autre côté est l'octet numéro 225. |
+| Window | `115` | Taille de la fenêtre de réception TCP. |
+| Length | `1` | Le segment contient un octet de données. |
+
+### Premier point : pourquoi identifie-t-on le Client et le Server ?
+
+Regardons cette partie :
+
+
+59.233.235.218.39247 > 59.233.235.223.12121
+
+
+Le symbole `>` indique le sens de transmission.
+
+Cela signifie :
+
+
+Client                              Server
+59.233.235.218                      59.233.235.223
+Port 39247                          Port 12121
+       |                                  |
+       |------------ Packet ------------>|
+
+
+Dans cette communication, le client utilise le port temporaire `39247` pour se connecter au port `12121` du serveur.
+
+### Deuxième point : signification des flags [P.]
+
+Flags [P.]
+
+
+Cette notation indique que deux flags sont activés :
+
+- `P` = PSH (Push)
+- `.` = ACK (Acknowledgment)
+
+**PSH :** demande à TCP de transmettre les données reçues à l'application destinataire sans délai inutile.
+
+**ACK :** indique que ce segment contient également une information d'acquittement des données précédemment reçues.
+
+Ce paquet contient donc à la fois des données et une information d'acquittement.
+
+### Troisième point : Sequence Number
+
+
+seq 185:186
+
+
+Cela signifie que ce segment contient un octet de données TCP.
+
+Pourquoi ?
+
+
+186 - 185 = 1 byte
+
+Cela correspond à la valeur suivante :
+
+
+length 1
+
+
+Le segment contient donc un seul octet de données.
+
+### Quatrième point : Acknowledgment Number
+
+
+ack 225
+
+
+Cela signifie que le client attend de recevoir l'octet numéro 225 de la part du serveur.
+
+Autrement dit, le client a reçu tous les octets jusqu'au numéro 224 et attend maintenant l'octet 225.
+
+---
+
+## 2. Analyse de la partie Hexadécimale (contenu réel du paquet)
+
+Examinons maintenant la partie suivante :
+
+
+0x0000:  4510 0035 a0fb 4000 4006 4a2b 3be9 ebda
+0x0010:  3be9 ebdf 994f 2f59 9d18 157b baa8 fb25
+0x0020:  8018 0073 92a7 0000 0101 080a 011b bcc2
+0x0030:  02c2 3c62 66
+
+
+Ces informations contiennent l'en-tête IP, l'en-tête TCP et enfin le Payload.
+
+### A. IP Header (en-tête IP)
+
+Les 20 premiers octets correspondent à l'en-tête IP :
+
+
+4510 0035 a0fb 4000 4006 4a2b 3be9 ebda
+3be9 ebdf
+
+
+Quelques éléments importants :
+
+| Hexadécimal | Valeur | Explication |
+| `45` | IPv4 + Header Length 20 bytes | Version IP et longueur de l'en-tête. |
+| `0035` | 53 bytes | Longueur totale du paquet IP. |
+| `4000` | DF | Le flag Don't Fragment est activé. |
+| `40` | 64 | Valeur du TTL. |
+| `06` | TCP | Protocole de la couche suivante. |
+| `3be9ebda` | 59.233.235.218 | Adresse IP source. |
+| `3be9ebdf` | 59.233.235.223 | Adresse IP destination. |
+
+Remarque : la valeur `06` indique que le protocole de la couche Transport est TCP.
+
+### B. TCP Header (en-tête TCP)
+
+La partie suivante correspond à l'en-tête TCP :
+
+
+994f 2f59 9d18 157b baa8 fb25
+8018 0073 92a7 0000
+0101 080a 011b bcc2 02c2 3c62
+
+
+Examinons les éléments importants :
+
+| Hexadécimal | Valeur | Explication |
+| `994f` | 39247 | Source Port |
+| `2f59` | 12121 | Destination Port |
+| `9d18157b` | Sequence Number | Numéro de séquence réel. |
+| `baa8fb25` | Acknowledgment Number | Numéro d'acquittement réel. |
+| `8018` | Data Offset + Flags | Longueur de l'en-tête et flags. |
+| `0073` | 115 | Taille de la fenêtre TCP. |
+| `0101` | NOP, NOP | Options de remplissage TCP. |
+| `080a` | Timestamp option | Option Timestamp de TCP. |
+
+#### Pourquoi 8018 indique-t-il PSH et ACK ?
+
+Nous allons convertir le deuxième octet, `18`, en binaire :
+
+
+18 (Hex) = 00011000 (Binary)
+
+
+Dans les flags TCP, l'ordre des bits est le suivant :
+
+
+CWR ECE URG ACK PSH RST SYN FIN
+ 0   0   0   1   1   0   0   0
+
+
+On obtient donc :
+
+- ACK = 1
+- PSH = 1
+
+C'est pour cette raison que `tcpdump` affiche :
+
+
+Flags [P.]
+
+
+### C. Payload (données réelles)
+
+Examinons maintenant la dernière partie :
+
+
+0x0030:  02c2 3c62 66
+
+
+Nous devons d'abord séparer les en-têtes du Payload.
+
+La longueur totale du paquet IP est de 53 octets.
+
+La longueur de l'en-tête IP est de 20 octets.
+
+La longueur de l'en-tête TCP est de 32 octets.
+
+Par conséquent :
+
+
+53 - 20 - 32 = 1 byte
+
+
+Nous avons donc un seul octet de Payload :
+
+
+Hex: 66
+ASCII: f
+
+
+La valeur hexadécimale `66` correspond au caractère `f` dans la table ASCII.
+
+**Conclusion : la donnée réelle envoyée par le client au serveur dans ce paquet est le caractère `f`.**
+
+---
+
+## 3. Récapitulatif du paquet
+
+Si nous regroupons toutes les informations :
+
+
+Client: 59.233.235.218
+Port:   39247
+
+          |
+          | TCP Segment
+          |
+          | Flags: PSH + ACK
+          | Sequence: 185
+          | ACK: 225
+          | Payload: "f"
+          |
+          v
+
+Server: 59.233.235.223
+Port:   12121
+
+
+Ce paquet nous indique que :
+
+1. Une connexion TCP a déjà été établie.
+2. Le client a envoyé un octet de données au serveur.
+3. Cet octet correspond au caractère `f`.
+4. Les flags PSH et ACK sont activés.

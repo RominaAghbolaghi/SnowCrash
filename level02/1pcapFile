@@ -1,0 +1,51 @@
+## Qu'est-ce qu'un fichier .pcap ?
+
+**PCAP = Packet Capture** (français : capture de paquets).
+
+Lorsque deux ordinateurs communiquent sur un réseau, les informations sont échangées sous forme de petits paquets (*packets*).
+
+Un outil comme `tcpdump` ou `Wireshark` peut capturer ces paquets et les enregistrer dans un fichier `.pcap`.
+
+Imagine que quelqu'un enregistre une conversation téléphonique entre deux personnes. Le fichier PCAP est comme cet enregistrement :
+ tu peux l'analyser pour découvrir ce qui a été échangé.
+
+
+## Que contient exactement un fichier PCAP ?
+
+Chaque paquet réseau (*packet*) comporte deux parties principales :
+
+- **En-tête (Header | En-tête)** → Informations techniques : qui communique avec qui, quels ports sont utilisés, à quel moment et quel est le type de paquet.
+- **Données (Payload | Charge utile)** → Le contenu réel qui a été transmis.
+
+
+## À quoi sert un fichier PCAP ?
+
+Il existe deux utilisations très différentes, et cette distinction est importante en cybersécurité :
+
+| Utilisation | Par qui ? |
+| Dépannage et analyse du réseau (*débogage réseau*) : comprendre pourquoi un réseau est lent ou fonctionne mal. | Administrateur réseau, ingénieur en sécurité. |
+| Écoute et interception des données (*sniffing / écoute clandestine*) : lire des mots de passe et d'autres informations. | Attaquant (*Attacker*). |
+
+### Quelles informations peut contenir un fichier PCAP ?
+
+- Les adresses IP source et destination.
+- Les ports réseau.
+- Les protocoles tels que TCP et HTTP.
+- Les données échangées entre le client (*Client*) et le serveur (*Server*).
+- Même des informations d'authentification, si elles ont été transmises sans chiffrement.
+
+### Point important en sécurité
+
+Si un utilisateur transmet son mot de passe via une connexion non sécurisée, celui-ci peut être enregistré dans le fichier PCAP et rester accessible lors de son analyse.
+
+
+
+### Outils permettant de lire et d'analyser les fichiers PCAP
+
+Voici quelques outils capables de reconnaître le format PCAP et d'interpréter correctement les paquets réseau :
+
+| Outil | Fonction |
+| **Wireshark** | Interface graphique permettant d'analyser les paquets et de reconstituer les conversations en quelques clics. |
+| **tshark** | Version en ligne de commande de Wireshark. C'est l'outil que nous avons utilisé. |
+| **tcpdump** | Permet de visualiser rapidement les paquets réseau, mais offre moins de fonctionnalités pour reconstituer les conversations. |
+| **ngrep / tcpflow** | Permettent de rechercher du contenu dans les paquets et d'extraire les flux de communication. |

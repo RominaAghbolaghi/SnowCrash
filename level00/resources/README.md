@@ -28,7 +28,7 @@ level00@SnowCrash:~$ ls -la /usr/sbin/john
 Puisque nous avons les permissions nécessaires pour lire ce fichier comme auther, nous pouvons afficher son contenu avec la commande `cat` :
 
 level00@SnowCrash:~$ cat /usr/sbin/john
-cdiiddwpgswtgt
+plaintext/ciphertext
 
 À ce stade, nous pouvons supposer que cette chaîne de caractères correspond au mot de passe du compte `flag00`.
 
@@ -44,3 +44,8 @@ Cela signifie que cette chaîne n'est probablement pas le mot de passe en clair 
 Nous devons donc poursuivre notre analyse afin de comprendre comment retrouver sa valeur originale.
 
 
+Pour le mot de passe, comme il est composé uniquement de lettres, on suppose qu'il s'agit simplement d'une transformation du texte. On vérifie donc sur le site pour identifier le type de chiffrement utilisé.
+
+**dCode** : Pour identifier le type de chiffrement ou d'encodage. https://www.dcode.fr
+
+On teste le mot de passe obtenu pour user flag00, puis on exécute la commande `getflag` pour récupérer le token. apres on fait su level01 et son pass est le token optenu.
