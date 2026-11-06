@@ -1,0 +1,58 @@
+### 1. Le système `chmod` symbolique
+
+Voici une courte explication du système `chmod` symbolique:
+
+| Symbole | Signification |
+| `u` | user / owner (utilisateur / propriétaire) |
+| `g` | group (groupe) |
+| `o` | other (autres utilisateurs) |
+| `a` | all (tout le monde) |
+| `+` | ajouter une permission |
+| `-` | retirer une permission |
+| `=` | définir exactement les permissions indiquées |
+
+**Exemples :**
+
+
+chmod o+x echo     # Ajouter le droit d'exécution (x) uniquement à others
+chmod g-w echo     # Retirer le droit d'écriture (w) au groupe
+chmod u+x echo     # Ajouter le droit d'exécution (x) uniquement au propriétaire
+chmod o+rx echo    # Ajouter les droits de lecture (r) et d'exécution (x) à others
+
+### 2. Le système `chmod` numérique
+
+Chaque permission possède une valeur numérique :
+
+| Permission | Valeur |
+| `r` (read) | 4 |
+| `w` (write) | 2 |
+| `x` (execute) | 1 |
+
+On additionne les valeurs pour chaque catégorie d'utilisateurs.
+
+Les trois chiffres correspondent, dans l'ordre, à :
+
+1. Owner (propriétaire)
+2. Group (groupe)
+3. Other (autres utilisateurs)
+
+**Exemples :**
+
+| Valeur numérique | Permissions symboliques |
+| `755` | `rwxr-xr-x` |
+| `644` | `rw-r--r--` |
+| `700` | `rwx------` |
+
+**Exemple de calcul :**
+
+Pour `755` :
+
+- Owner : `4 + 2 + 1 = 7` → `rwx`
+- Group : `4 + 0 + 1 = 5` → `r-x`
+- Other : `4 + 0 + 1 = 5` → `r-x`
+
+Donc :
+chmod 755 echo
+
+donne les permissions :
+rwxr-xr-x

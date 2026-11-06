@@ -1,0 +1,162 @@
+
+# 1. En Bash (Shell)
+
+En Bash, les trois syntaxes ont des comportements différents.
+
+### A. Single quotes `'...'` : 
+
+Les Single quotes empêchent l'interprétation des caractères spéciaux par le Shell.
+
+Les variables ne sont pas interprétées et leur valeur n'est pas remplacée.
+
+Exemple :
+
+name="Romina"
+echo '$name'
+
+Résultat :
+$name
+
+**À retenir :** le contenu est traité littéralement (presque tous les caractères perdent leur signification spéciale).
+
+### B. Double quotes `"..."` :
+Les Double quotes  permettent l'interprétation de certaines expressions, notamment :
+- Les variables (`$variable`).
+- La substitution de commande (`$(command)`).
+- Certaines séquences spéciales comme `\"` et `\\`.
+
+Exemple :
+
+name="Romina"
+echo "$name"
+
+Résultat :
+Romina
+
+**À retenir :** les variables sont interprétées, mais les espaces et certains caractères spéciaux sont protégés contre le découpage
+ et l'expansion du Shell.
+
+### C. Backticks `` `...` `` : accents graves
+
+Les Backticks permettent d'exécuter une commande Shell et de récupérer sa sortie.
+
+Exemple :
+
+echo `whoami`
+
+Résultat :
+romina
+
+Cette opération s'appelle **Command Substitution**.
+
+La syntaxe moderne recommandée est :
+
+echo $(whoami)
+
+
+
+
+
+
+# 2. En Perl
+
+En Perl, les trois syntaxes ont également des comportements différents, mais certaines règles ne sont pas
+ identiques à celles de Bash.
+
+### A. Single quotes `'...'` : guillemets simples
+
+Les Single quotes créent une chaîne de caractères sans interpolation des variables.
+
+Exemple :
+
+```perl
+my $name = "Romina";
+print '$name';
+```
+
+Résultat :
+$name
+
+La variable `$name` n'est pas interprétée.
+
+### B. Double quotes `"..."` :
+
+Les Double quotes permettent l'interpolation des variables dans une chaîne de caractères.
+
+Exemple :
+
+```perl
+my $name = "Romina";
+
+print "$name";
+```
+
+Résultat :
+
+```text
+Romina
+```
+
+Perl remplace `$name` par sa valeur.
+
+### C. Backticks `` `...` `` : accents graves
+
+Les Backticks permettent d'exécuter une commande externe via le Shell et de récupérer sa sortie standard (stdout).
+
+Exemple :
+
+```perl
+my $result = `whoami`;
+
+print $result;
+```
+
+Résultat :
+
+```text
+romina
+```
+
+Cette syntaxe est appelée **Command Execution** ou **Backtick Operator**.
+
+
+
+# 3. Tableau comparatif
+
+| Syntaxe | Bash (Shell) | Perl |
+| `'...'` | Pas d'interprétation des variables | Pas d'interpolation des variables |
+| `"..."` | Interpolation des variables et certaines expansions | Interpolation des variables |
+| `` `...` `` | Exécution d'une commande Shell | Exécution d'une commande externe via le Shell |
+
+## 4. Application au SnowCrash Level04
+
+Dans notre script Perl :
+
+```perl
+sub x {
+    $y = $_[0];
+    print `echo $y 2>&1`;
+}
+```
+
+Il faut comprendre deux mécanismes successifs :
+
+1. **Perl interprète le contenu des Backticks.** Il remplace `$y` par sa valeur.
+2. **Le Shell exécute la commande construite.** Il interprète ensuite sa propre syntaxe.
+
+Par exemple, si `$y` contient `hello`, Perl construit :
+
+```bash
+echo hello 2>&1
+```
+
+Le Shell exécute cette commande.
+
+Le problème de sécurité vient du fait que la valeur de `$y`, contrôlée par l'utilisateur, est directement intégrée dans une commande Shell.
+
+C'est une vulnérabilité appelée **Command Injection**.
+
+**Point essentiel pour l'évaluation :** Perl et Bash sont deux interpréteurs différents. Dans ce code, Perl intervient d'abord, puis le Shell intervient pour exécuter la commande. C'est précisément cette distinction qui permet de comprendre la vulnérabilité.
+
+
+

@@ -1,0 +1,378 @@
+# Level04 – Comprendre le fonctionnement de curl, HTTP et CGI
+
+Suivons tout le processus, depuis le moment où nous exécutons la commande `curl` jusqu'au moment où une commande Shell est exécutée sur la machine SnowCrash.
+
+# Étape 1 : Envoyer une requête avec curl
+
+Dans le Level04, nous savons que le programme est accessible à cette adresse :
+
+localhost:4747
+
+Nous avons trouvé cette information dans un commentaire du fichier Perl :
+
+# localhost:4747
+
+Nous pouvons vérifir que le port 4747 est en état d'écoute (*LISTEN*) avec la commande :
+ss -tuln
+
+Nous pouvons maintenant envoyer une requête HTTP avec `curl` : (-v: verbose)
+
+curl -v http://localhost:4747/level04.pl
+
+
+Cette commande envoie une requête HTTP de type GET vers le chemin `/level04.pl`.
+
+Mais pour le moment, nous n'avons envoyé aucun paramètre.
+
+# Étape 2 : Comment savoir si nous devons envoyer un paramètre ?
+
+Pour le comprendre, nous devons examiner le code source Perl.
+
+Regardons cette instruction :
+
+use CGI qw{param};
+
+La fonction `param` permet de récupérer les paramètres de la requête HTTP.
+
+Maintenant, regardons la dernière ligne du programme :
+
+x(param("x"));
+
+Cette ligne nous donne deux informations importantes :
+
+1. Le programme appelle la fonction `param("x")`.
+2. Le nom du paramètre attendu par le programme est `x`.
+
+Nous comprenons donc, en lisant le code, que nous devons envoyer un paramètre nommé `x`.
+
+Si le programme contenait :
+
+param("name")
+
+Nous devrions envoyer un paramètre nommé `name`.
+
+Par conséquent, c'est le développeur qui définit le nom du paramètre dans le code. 
+Nous ne le choisissons pas nous-mêmes.
+
+# Étape 3 : Comment envoyer un paramètre avec curl ?
+
+Dans une URL, nous utilisons le caractère `?` pour commencer la Query String (chaîne de paramètres).
+
+Structure générale :
+
+*****http://server:port/path?parameter=value
+
+Dans notre cas :
+
+curl "http://localhost:4747/level04.pl?x=salam"
+
+Les différentes parties de l'URL :
+
+| Partie | Signification |
+| `http://` | Protocole de communication |
+| `localhost` | Adresse du serveur |
+| `4747` | Port |
+| `/level04.pl` | Chemin de la requête |
+| `?` | Début de la Query String |
+| `x` | Nom du paramètre |
+| `salam` | Valeur du paramètre |
+
+Lorsque cette requête est envoyée, le programme Perl peut récupérer la valeur `salam` grâce à `param("x")`.
+
+
+# Étape 4 : À qui arrive la requête HTTP ?
+
+Lorsque nous exécutons :
+
+curl "http://localhost:4747/level04.pl?x=salam"
+
+
+Voici ce qui se passe :
+
+**1. curl envoie la requête.**
+
+Tout d'abord, curl établit une connexion TCP vers l'adresse `127.0.0.1` et le port `4747`.
+
+**2. Apache reçoit la requête.**
+
+Pourquoi Apache ?
+
+Parce que nous avons précédemment exécuté :
+
+la réponse de `curl -v` nous a également confirmé cette information :
+
+Server: Apache/2.2.22 (Ubuntu)
+
+ps aux
+
+Nous avons constaté qu'Apache était en cours d'exécution sur le système.
+
+Ensuite, avec :
+
+ss -tuln
+
+Nous avons constaté que le port 4747 était en état d'écoute (*LISTEN*).
+
+
+Nous savons donc que la requête HTTP arrive à Apache.
+
+**3. Apache analyse la requête.**
+
+Apache doit déterminer quelle ressource correspond à l'URL demandée.
+
+Pour cela, il utilise sa propre configuration.
+
+Si le chemin demandé correspond à un script CGI, Apache exécute ce script.
+
+Cette association peut être définie à l'aide de directives telles que `ScriptAlias` ou `ExecCGI`.
+
+# Étape 5 : Apache exécute le script Perl
+
+Supposons qu'Apache ait déterminé que la requête `/level04.pl` doit être dirigée vers le script Perl du Level04.
+
+À cette étape :
+
+1. Apache exécute le script.
+2. Il met les informations de la requête à disposition du CGI via des variables d'environnement (*Environment Variables*).
+3. Le script Perl est exécuté à l'aide de l'interpréteur Perl.
+
+Pour notre requête GET, une variable d'environnement importante est :
+
+QUERY_STRING=x=salam
+
+La variable `QUERY_STRING` contient les paramètres situés après le caractère `?` dans l'URL.
+
+Par exemple :
+
+URL :
+http://localhost:4747/level04.pl?x=salam
+
+QUERY_STRING :
+x=salam
+
+
+Le CGI transmet ainsi les informations de la requête au script.
+
+# Étape 6 : Perl récupère le paramètre
+
+Maintenant, c'est au tour du code Perl de s'exécuter.
+
+Tout d'abord :
+
+use CGI qw{param};
+
+
+Le module CGI met la fonction `param` à disposition du programme.
+
+Ensuite, cette instruction est exécutée :
+
+
+x(param("x"));
+
+
+Que se passe-t-il ?
+
+**Premièrement :**
+
+param("x")
+
+
+La fonction `param` récupère la valeur du paramètre `x` envoyé dans la requête.
+
+Dans notre exemple :
+
+salam
+
+**Deuxièmement :**
+
+La valeur retournée est transmise à la fonction `x` :
+
+
+x("salam");
+
+
+**Troisièmement :**
+
+À l'intérieur de la fonction :
+
+
+sub x {
+    $y = $_[0];
+}
+
+
+La valeur `salam` est stockée dans la variable `$y`.
+
+À ce moment-là, nous avons :
+
+
+$y = "salam"
+
+
+# Étape 7 : Exécution de la commande Shell
+
+Nous arrivons maintenant à la partie la plus dangereuse du programme :
+
+
+print `echo $y 2>&1`;
+
+
+Regardons les backticks (accents graves) :
+
+
+`command`
+
+
+En Perl, les backticks permettent d'exécuter la commande qu'ils contiennent via un Shell et de récupérer sa sortie.
+
+Comme la valeur de `$y` est `salam`, la commande exécutée est approximativement équivalente à :
+
+
+echo salam 2>&1
+
+
+À cette étape :
+
+1. Perl transmet la commande au Shell.
+2. Le Shell exécute la commande.
+3. Le résultat de la commande est retourné à Perl.
+4. La fonction `print` affiche le résultat.
+
+**Remarque importante :** la commande Shell est exécutée avec les permissions de l'utilisateur sous lequel le processus CGI s'exécute. Nous devons vérifier cet utilisateur séparément.
+
+# Étape 8 : La réponse revient à curl
+
+La sortie de la commande Shell est récupérée par Perl.
+
+Ensuite, cette instruction :
+
+
+print "Content-type: text/html\n\n";
+
+
+génère l'en-tête de la réponse CGI.
+
+Et cette instruction :
+
+
+print `echo $y 2>&1`;
+
+
+génère le contenu de la réponse.
+
+Apache récupère la sortie du CGI et la transforme en réponse HTTP.
+
+Enfin, la réponse est renvoyée à curl, qui l'affiche dans le terminal.
+
+---
+
+# Vue d'ensemble du processus complet du Level04
+
+Regroupons toutes les étapes :
+
+```text
+          CLIENT (curl)
+                |
+                |
+        HTTP GET Request
+                |
+                v
+         localhost:4747
+                |
+                v
+          SERVEUR APACHE
+                |
+                |
+       Analyse de la requête HTTP
+                |
+                v
+       Configuration CGI
+                |
+                |
+       Exécution du script Perl
+                |
+                v
+       QUERY_STRING=x=salam
+                |
+                v
+          CGI.pm / param()
+                |
+                v
+           param("x")
+                |
+                v
+           x("salam")
+                |
+                v
+          $y = "salam"
+                |
+                v
+       `echo $y 2>&1`
+                |
+                v
+       EXÉCUTION DU SHELL
+                |
+                v
+       Retour du résultat
+                |
+                v
+           Perl print()
+                |
+                v
+          Serveur Apache
+                |
+                v
+          Réponse HTTP
+                |
+                v
+              curl
+```
+
+## 9. Où se trouve exactement la vulnérabilité ?
+
+Le problème se trouve ici :
+
+```perl
+print `echo $y 2>&1`;
+```
+
+Le programme intègre directement une donnée contrôlée par l'utilisateur dans une commande Shell, sans protection.
+
+Par conséquent, si l'entrée contient des caractères spéciaux du Shell, celui-ci peut les interpréter comme faisant partie de la commande.
+
+C'est ce qu'on appelle une **Command Injection (injection de commandes)**.
+
+---
+
+## 10. Que devons-nous encore vérifier dans SnowCrash ?
+
+Pour que notre analyse ne soit pas seulement théorique, nous devons identifier trois éléments à l'aide de preuves concrètes :
+
+| Question | Outil de vérification |
+| Comment Apache redirige-t-il la requête vers Perl ? | Configuration Apache |
+| Sous quel utilisateur le CGI est-il exécuté ? | Analyse du processus pendant l'exécution de la requête |
+| Avec quelles permissions la commande Shell est-elle exécutée ? | Vérification de l'identité du processus et de sa configuration |
+
+### Une remarque importante sur le nom du paramètre
+
+Nous avons trouvé le nom `x` dans cette instruction :
+
+```perl
+x(param("x"));
+```
+
+Cela signifie que le développeur a défini `x` comme nom du paramètre attendu.
+
+Si le code était :
+
+```perl
+x(param("password"));
+```
+
+Nous devrions envoyer le paramètre `password`.
+
+**La règle à retenir :**
+
+Pour savoir quels paramètres envoyer à une application web, nous devons d'abord examiner le code et identifier les paramètres HTTP qu'elle utilise.
+
+C'est une compétence essentielle pour analyser les vulnérabilités des applications web.

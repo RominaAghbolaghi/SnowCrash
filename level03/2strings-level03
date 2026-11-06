@@ -1,0 +1,63 @@
+Les applications de `strings` en cybersécurité:
+La commande `strings` est particulièrement utile en cybersécurité pour analyser les fichiers binaires et
+ identifier des informations intéressantes sans avoir besoin d'exécuter le programme.
+
+
+**`not stripped` **
+
+Le terme `stripped` signifie que des informations supplémentaires, comme les noms des fonctions et d'autres symboles, ont été supprimées du fichier binaire.
+
+`not stripped` signifie que ces informations sont toujours présentes dans le fichier.
+
+Ainsi, si nous voulons analyser le programme avec des outils comme `gdb` ou `objdump`, nous pourrons voir les noms des fonctions, ce qui rendra l'analyse et la lecture du programme beaucoup plus faciles.
+
+
+__________________________________________________________________________________________________________
+Nous pouvons également utiliser le site "https://dogbolt.org" pour décompiler un fichier binaire et 
+obtenir une représentation du code en assembleur ou dans un langage de plus haut niveau, comme le C.
+
+__________________________________________________________________________________________________________
+
+### strings level03
+
+**Quels éléments importants avons-nous trouvés avec `strings` ?**
+
+Trois lignes clés :
+
+
+system                        ← nom d'une fonction de la libc
+/usr/bin/env echo Exploit me  ← chaîne de caractères exécutée par le programme
+setresuid / setresgid         ← fonctions permettant de définir l'identité du processus
+
+
+Lorsque nous avons exécuté `./level03`, le programme a affiché :
+
+
+Exploit me
+
+
+Voyons maintenant comment ces différents éléments sont liés.
+
+## 1. La fonction `system()`
+
+`system()` est une fonction de la bibliothèque standard C (`libc`) qui transmet une commande au shell 
+afin qu'elle soit exécutée.
+
+Autrement dit, le programme lance un shell à l'intérieur de son propre processus et lui transmet une 
+commande à exécuter.
+
+## 2. La chaîne `/usr/bin/env echo Exploit me`
+
+C'est la commande que le programme transmet à `system()`.
+
+Décomposons-la :
+
+- `echo Exploit me` → C'est assez évident : cette commande affiche le texte `Exploit me` 
+(c'est exactement ce que nous avons vu à l'écran).
+
+- `/usr/bin/env echo ...` → C'est ici que se trouve le point essentiel. 
+`env` est un programme dont le rôle est de rechercher et d'exécuter un autre programme.
+
+Le programme demande donc en réalité :
+
+« Utilise `env` pour trouver et exécuter la commande `echo`, puis affiche le texte `Exploit me`. »

@@ -1,0 +1,204 @@
+
+-  rws  r-s  r-x
+│   │    │    │
+│   │    │    └── others (les autres utilisateurs) : r-x → lecture + exécution
+│   │    └─────── group (groupe = level03) : r-s
+│   └──────────── owner (propriétaire = flag03) : rws
+└──────────────── Type de fichier : - signifie qu'il s'agit d'un fichier ordinaire
+
+
+
+### 1. Un détail important concernant les permissions
+
+À la place du `x` (execute | exécution), on trouve la lettre `s` dans les permissions du propriétaire 
+(*owner*) et du groupe (*group*).
+
+- `rws` dans la partie **owner** → cela signifie que le bit SUID est activé (*Set User ID*).
+- `r-s` dans la partie **group** → cela signifie que le bit SGID est activé (*Set Group ID*).
+
+### 2. Que signifie SUID ? (Concept clé de ce niveau)
+
+En temps normal (permission x), lorsque tu exécutes un programme, celui-ci s'exécute avec ton identité et tes permissions.
+ Autrement dit, si tu es connecté en tant que `level03`, le programme s'exécute avec les permissions de `level03`.
+
+Mais lorsque le bit SUID (s) est activé sur un fichier exécutable, le programme s'exécute avec l'identité de son
+ propriétaire (flag03), et non avec celle de l'utilisateur qui le lance(level03).
+
+Dans notre cas, le propriétaire du fichier est `flag03`. Donc :
+
+Lorsque tu (`level03`) exécutes ce programme, celui-ci s'exécute avec l'identité et les permissions de `flag03`.
+
+C'est exactement ce que nous recherchons, puisque notre objectif est d'obtenir l'accès au compte `flag03`
+ et d'exécuter `getflag`.
+
+
+**Terminologie : SUID bit (bit SUID)**
+
+Il s'agit d'un mécanisme de Linux qui permet à un programme de s'exécuter avec les permissions de son propriétaire,
+ plutôt qu'avec celles de l'utilisateur qui le lance.
+
+**Un exemple concret que tu as probablement déjà rencontré : la commande `passwd`.**
+
+Lorsque tu changes ton mot de passe, le système doit modifier le fichier `/etc/shadow`, qui appartient à `root`.
+ Pourtant, tu n'es pas `root` !
+
+La commande `passwd` est un programme SUID appartenant à `root`. C'est pour cette raison qu'elle peut effectuer 
+cette modification dans le fichier protégé.
+
+
+### Le SUID ne signifie pas que « l'utilisateur a le droit d'exécuter le programme ».
+
+**1. Qui a le droit d'exécuter le programme ? → C'est le bit `x` qui le détermine.**
+
+Dans notre sortie, la partie **others** est `r-x`. Cela signifie que tous les utilisateurs (y compris toi, `level03`) 
+ont le droit de lire et d'exécuter le programme.
+
+Cela n'a aucun rapport avec le SUID.
+
+**2. Avec l'identité de qui le programme s'exécute-t-il ? → C'est le bit `s` (SUID) qui le détermine.**
+
+Normalement, lorsque tu exécutes un programme, celui-ci s'exécute avec ta propre identité (`level03`).
+
+Mais puisque le SUID est activé, le programme s'exécute avec l'identité de son propriétaire, 
+c'est-à-dire `flag03`.
+
+La bonne formulation est donc :
+
+« Puisque le propriétaire du fichier est `flag03` et que le bit SUID est activé, lorsque j'exécute ce programme,
+celui-ci fonctionne avec l'identité et les permissions de `flag03`, et non avec les miennes. »
+
+**« Le programme s'exécute avec l'identité de flag03 » = c'est notre opportunité en or !**
+
+
+
+
+
+### Représentation des permissions sous Linux
+
+Linux affiche les permissions de la manière suivante :
+
+| Ce que tu vois | SUID activé ? | Bit d'exécution (`x`) activé ? |
+| `x` | ❌ Non | ✅ Oui |
+| `s` (minuscule) | ✅ Oui | ✅ Oui |
+| `S` (majuscule) | ✅ Oui | ❌ Non |
+| `-` | ❌ Non | ❌ Non |
+
+**Point essentiel :**
+
+Un `s` minuscule signifie que le SUID est activé et que le bit d'exécution est également activé. Autrement dit, le programme peut être exécuté et s'exécute avec l'identité de son propriétaire.
+
+Un `S` majuscule signifie que le SUID est activé, mais que le bit d'exécution est désactivé. Cette configuration est généralement inutile en pratique : le SUID est activé, mais le fichier ne peut pas être exécuté par les utilisateurs concernés.
+
+
+
+
+### Comprendre la relation entre Parent Process et Child Process
+
+Sous Linux, lorsqu'un programme exécute un autre programme, un nouveau processus peut être créé.
+
+- **Parent Process (processus parent)** : le processus qui crée ou lance un autre processus.
+- **Child Process (processus enfant)** : le processus créé par le processus parent.
+
+Par exemple, dans notre cas :
+
+level03
+   |
+   | system()
+   v
+Shell
+   |
+   v
+env
+   |
+   v
+echo
+
+Chaque programme lancé peut correspondre à un nouveau processus.
+
+### Comment les identifiants utilisateur sont-ils transmis ?
+
+Supposons que le fichier `level03` possède les permissions suivantes :
+
+-rwsr-xr-x 1 flag03 level03 ...
+
+L'utilisateur `level03` exécute le programme :
+
+./level03
+
+Comme le bit SUID est activé, le processus s'exécute avec les identifiants suivants :
+
+Real UID      = level03
+Effective UID = flag03
+
+Lorsqu'un processus crée un processus enfant avec `fork()`, celui-ci hérite des identifiants utilisateur du processus parent.
+
+Le processus enfant aura donc, dans notre exemple :
+
+Real UID      = level03
+Effective UID = flag03
+
+Cela signifie que le processus enfant peut lui aussi bénéficier des privilèges associés à l'utilisateur `flag03`.
+
+### Quel est le rapport avec SnowCrash Level03 ?
+
+Voici la chaîne d'exécution que nous cherchons à comprendre :
+
+User: level03
+      |
+      v
+./level03
+      |
+      | SUID
+      v
+Effective UID = flag03
+      |
+      v
+system()
+      |
+      v
+Shell
+      |
+      v
+/usr/bin/env echo Exploit me
+      |
+      v
+Recherche de echo dans PATH
+      |
+      v
+/tmp/hijack/echo
+      |
+      v
+/bin/getflag
+
+Si l'Effective UID est conservé tout au long de cette chaîne, le programme `getflag` sera lui aussi exécuté avec l'Effective UID `flag03`.
+
+Nous pourrons alors obtenir le token associé à ce niveau.
+
+### 4. Différence entre fork() et execve()
+
+Deux appels système sont particulièrement importants pour comprendre ce mécanisme :
+
+| Fonction   | Rôle  |
+| `fork()`   | Crée un nouveau processus enfant qui hérite des identifiants utilisateur du processus parent.|
+| `execve()` | Remplace le programme actuellement exécuté par un autre programme dans le même processus. Les identifiants sont généralement conservés, sauf si les conditions d'exécution entraînent un changement, par exemple à cause des bits SUID ou SGID du nouveau fichier. |
+
+
+
+**Attention :** l'héritage des identifiants ne garantit pas que les privilèges SUID seront conservés dans toutes les situations. Le comportement du Shell et les mécanismes de sécurité du système peuvent notamment modifier l'Effective UID.
+
+
+
+--------------------------------------------------------------------------------------------------
+
+### 3. Qu'est-ce que la fonction `setresuid()` ?
+
+Cette fonction permet de définir les trois identifiants utilisateur (*UID*) d'un processus :
+
+int setresuid(uid_t ruid, uid_t euid, uid_t suid);
+
+
+**Les paramètres :**
+
+- `ruid` : nouvelle valeur du Real UID (identifiant utilisateur réel).
+- `euid` : nouvelle valeur de l'Effective UID (identifiant utilisateur effectif).
+- `suid` : nouvelle valeur du Saved UID (identifiant utilisateur sauvegardé).

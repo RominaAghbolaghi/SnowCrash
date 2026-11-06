@@ -1,0 +1,65 @@
+### 1. Qu'est-ce que CGI et quel problème résout-il ?
+
+Un serveur web, à lui seul, peut uniquement envoyer des fichiers statiques (*static files*), comme une 
+image ou une page HTML qui reste toujours identique.
+
+Mais que se passe-t-il si on veut créer une page dynamique (*dynamic page*) ? Par exemple, une page dont 
+la réponse change en fonction des données saisies par l'utilisateur ?
+
+Le serveur web ne sait pas, à lui seul, exécuter la logique de programmation nécessaire pour produire 
+ce type de réponse.
+
+C'est là qu'intervient **CGI (Common Gateway Interface)**.
+
+CGI est une convention qui définit la communication entre un serveur web et un programme externe.
+
+Son principe est le suivant :
+
+« Hé, serveur web ! Lorsqu'un utilisateur demande cette page, ne génère pas toi-même la réponse.
+ Exécute plutôt ce script, transmets-lui les données saisies par l'utilisateur et renvoie-lui comme 
+ réponse tout ce que le script affiche. »
+
+Ce script peut être écrit dans différents langages de programmation, comme Perl, Python ou Bash.
+
+Dans notre cas, nous allons utiliser Perl.
+
+
+
+
+### 2. Perl est un langage de programmation (Programming Language) dont le nom est l'acronyme de **Practical Extraction and Reporting Language**.
+
+Ce langage était autrefois très utilisé pour le traitement de texte, la gestion de fichiers, l'automatisation des systèmes et la programmation web.
+
+### À quoi sert Perl ?
+
+Voici quelques-unes des principales utilisations de Perl :
+
+- **Traitement et recherche de texte (Text Processing)**
+- Lecture et écriture de fichiers
+- Exécution de commandes du système d'exploitation
+- Écriture de scripts d'automatisation
+- Développement d'applications web avec CGI (Common Gateway Interface).
+
+
+ which perl
+/usr/bin/perl
+
+
+
+### Le point essentiel pour l'évaluation humaine (Human Evaluation)
+
+Pour le Level04, il faut être capable d'expliquer la chaîne d'exécution suivante :
+
+1. L'utilisateur envoie une requête HTTP à l'aide de `curl`.
+2. Apache reçoit la requête.
+3. Le script CGI récupère le paramètre `x` à l'aide de `param("x")`.
+4. La valeur reçue est stockée dans la variable `$y`.
+5. Perl insère la valeur de `$y` directement dans une commande Shell.
+6. Les Backticks provoquent l'exécution de cette commande via le Shell.
+7. Comme l'entrée utilisateur est directement intégrée à la commande, une vulnérabilité de type **Command Injection** est présente.
+
+### Point de sécurité important
+
+La commande injectée est exécutée avec les privilèges de l'utilisateur sous lequel le processus CGI s'exécute, et non nécessairement avec les privilèges de `root`.
+
+Ce point est particulièrement important dans l'analyse d'une éventuelle **Privilege Escalation**.
